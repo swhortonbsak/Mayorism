@@ -1,12 +1,12 @@
-[submodule "Modules/eigen"]
-	path = Modules/eigen
-	url = https://gitlab.com/libeigen/eigen.git
 [submodule "Modules/json"]
 	path = Modules/json
 	url = https://github.com/nlohmann/json
 [submodule "Modules/ff_meters"]
 	path = Modules/ff_meters
 	url = https://github.com/ffAudio/ff_meters
-[submodule "Source/NeuralAmpModelerCore"]
-	path = Source/NeuralAmpModelerCore
-	url = https://github.com/Tr3m/namcore-old
+[submodule "Modules/NeuralAmpModelerCore"]
+	path = Modules/NeuralAmpModelerCore
+	url = https://github.com/sdatkinson/NeuralAmpModelerCore
+[submodule "Modules/AudioDSPTools"]
+	path = Modules/AudioDSPTools
+	url = https://github.com/Tr3m/AudioDSPTools

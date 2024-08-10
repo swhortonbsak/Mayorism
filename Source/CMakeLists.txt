@@ -1,4 +1,4 @@
-target_sources(NAM
+target_sources(${PROJECT_NAME}
 PRIVATE
     NeuralAmpModeler.cpp
     NeuralAmpModeler.h
@@ -19,9 +19,6 @@ PRIVATE
     DoublerProcessor.h
     architecture.hpp
 )
-
-add_subdirectory(NeuralAmpModelerCore)
-include_directories(NeuralAmpModelerCore)
 
 add_subdirectory(PresetManager)
 include_directories(PresetManager)

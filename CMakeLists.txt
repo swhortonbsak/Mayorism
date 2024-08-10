@@ -1,9 +1,25 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(NAM VERSION 0.3.2)
-set(PROJECT_NAME "NAM")
+set(PROJECT_NAME "NEURAL_AMP_MODELER")
+project(${PROJECT_NAME} VERSION 0.4.0)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	include_directories(SYSTEM /usr/local/include)
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	link_libraries(stdc++fs)
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
+else()
+	message(FATAL_ERROR "Unrecognized Platform!")
+endif()
+
+add_definitions(-w)
+add_definitions(-DNAM_SAMPLE_FLOAT)
+add_definitions(-DDSP_SAMPLE_FLOAT)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -11,7 +27,12 @@ endif()
 
 find_package(JUCE CONFIG REQUIRED)
 
-juce_add_plugin(NAM
+include_directories(SYSTEM Modules/NeuralAmpModelerCore)
+include_directories(SYSTEM Modules/AudioDSPTools)
+add_subdirectory(Modules/NeuralAmpModelerCore/Dependencies/eigen)
+add_subdirectory(Modules/json)
+
+juce_add_plugin(${PROJECT_NAME}
     VERSION 0.3.2
     ICON_BIG "Assets/ICON.png"
     ICON_SMALL "Assets/ICON.png"
@@ -23,14 +44,13 @@ juce_add_plugin(NAM
     # EDITOR_WANTS_KEYBOARD_FOCUS TRUE/FALSE
     # COPY_PLUGIN_AFTER_BUILD TRUE/FALSE  
     # PLUGIN_MANUFACTURER_CODE Juce             
-    # PLUGIN_CODE MlS0                                                            
+    PLUGIN_CODE NMj0
     FORMATS AU VST3 Standalone                  
     PRODUCT_NAME "Neural Amp Modeler"
     JucePlugin_Manufacturer "Manos Labrakis"
     )        
     
-
-juce_generate_juce_header(NAM)
+juce_generate_juce_header(${PROJECT_NAME})
 
 #add_subdirectory(Assets)
 
@@ -38,18 +58,49 @@ add_subdirectory(Assets)
 add_subdirectory(Source)
 include_directories(Source)
 
-add_subdirectory(Modules/json)
+target_sources(${PROJECT_NAME}
+PRIVATE
+    Modules/ff_meters/ff_meters.h
+    Modules/ff_meters/ff_meters.cpp
+    Modules/NeuralAmpModelerCore/NAM/activations.cpp
+    Modules/NeuralAmpModelerCore/NAM/activations.h
+    Modules/NeuralAmpModelerCore/NAM/convnet.cpp
+    Modules/NeuralAmpModelerCore/NAM/convnet.h
+    Modules/NeuralAmpModelerCore/NAM/dsp.cpp
+    Modules/NeuralAmpModelerCore/NAM/dsp.h
+    Modules/NeuralAmpModelerCore/NAM/get_dsp.cpp
+    Modules/NeuralAmpModelerCore/NAM/lstm.cpp
+    Modules/NeuralAmpModelerCore/NAM/lstm.h
+    Modules/NeuralAmpModelerCore/NAM/util.cpp
+    Modules/NeuralAmpModelerCore/NAM/util.h
+    Modules/NeuralAmpModelerCore/NAM/version.h
+    Modules/NeuralAmpModelerCore/NAM/wavenet.cpp
+    Modules/NeuralAmpModelerCore/NAM/wavenet.h
+    Modules/AudioDSPTools/dsp/dsp.cpp
+    Modules/AudioDSPTools/dsp/dsp.h
+    Modules/AudioDSPTools/dsp/ImpulseResponse.cpp
+    Modules/AudioDSPTools/dsp/ImpulseResponse.h
+    Modules/AudioDSPTools/dsp/NoiseGate.cpp
+    Modules/AudioDSPTools/dsp/NoiseGate.h
+    Modules/AudioDSPTools/dsp/RecursiveLinearFilter.cpp
+    Modules/AudioDSPTools/dsp/RecursiveLinearFilter.h
+    Modules/AudioDSPTools/dsp/Resample.h
+    Modules/AudioDSPTools/dsp/ResamplingContainer
+    Modules/AudioDSPTools/dsp/version.h
+    Modules/AudioDSPTools/dsp/wav.cpp
+    Modules/AudioDSPTools/dsp/wav.h    
+)
 
-add_subdirectory(Modules/eigen)
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(amd64)|(AMD64)|(x86_64)")
+	option(USE_NATIVE_ARCH "Enable architecture-specific optimizations" OFF)
 
-target_sources(NAM
-    PRIVATE
-        Modules/ff_meters/ff_meters.h
-        Modules/ff_meters/ff_meters.cpp)
+	if (USE_NATIVE_ARCH)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64-v3")
+		message("Enabling -march=x86-64-v3")
+	endif (USE_NATIVE_ARCH)
+endif ()
 
-
-
-target_compile_definitions(NAM
+target_compile_definitions(${PROJECT_NAME}
     PUBLIC
         # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
         JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
@@ -58,9 +109,8 @@ target_compile_definitions(NAM
         JUCE_DISPLAY_SPLASH_SCREEN=0
         JUCE_MODAL_LOOPS_PERMITTED=1)     
 
-target_link_libraries(NAM
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        # AudioPluginData           # If we'd created a binary data target, we'd link to it here
         BinaryData
         juce::juce_audio_utils
         juce::juce_dsp
@@ -71,9 +121,12 @@ target_link_libraries(NAM
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
-target_include_directories(NAM
+target_include_directories(${PROJECT_NAME}
     PUBLIC
-        Modules/eigen
+        Modules/NeuralAmpModelerCore/NAM
+        Modules/NeuralAmpModelerCore/Dependencies/eigen
+        Modules/NeuralAmpModelerCore/Dependencies/nlohmann
+        Modules/AudioDSPTools/dsp
         Modules/json/include
         Modules/json/include/nlohmann
         Modules/
