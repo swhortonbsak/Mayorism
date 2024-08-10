@@ -104,7 +104,7 @@ NamEditor::NamEditor(NamJUCEAudioProcessor& p)
     clearModelButton->onClick = [this]
     {
         audioProcessor.clearNAM();
-        clearModelButton->setVisible(audioProcessor.getNamModelStatus());
+        clearModelButton->setVisible(false); // TODO: Set visibility based on logic from the processor side...
         modelNameBox->setText("");
         modelNameBox->clear();
     };
@@ -288,17 +288,19 @@ void NamEditor::loadModelButtonClicked()
 {
     juce::FileChooser chooser("Choose an model to load", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.nam", true, false);
 
+    bool modelLoaded = false;
+    
     if (chooser.browseForFileToOpen())
     {		
         juce::File model;
         model = chooser.getResult();
-        audioProcessor.loadNamModel(model);
+        modelLoaded = audioProcessor.loadNamModel(model);
         modelNameBox->setColour(juce::TextEditor::textColourId, juce::Colours::snow);
         modelNameBox->setText(model.getFileNameWithoutExtension());
         modelNameBox->setCaretPosition(0);
     }
 
-    clearModelButton->setVisible(audioProcessor.getNamModelStatus());
+    clearModelButton->setVisible(modelLoaded);
 }
 
 void NamEditor::loadIrButtonClicked()
@@ -392,7 +394,7 @@ void NamEditor::updateAfterPresetLoad()
     //DBG(addons.getProperty ("model_path", juce::String()).toString());
     //DBG(addons.getProperty ("ir_path", juce::String()).toString());
 
-    audioProcessor.loadFromPreset(addons.getProperty ("model_path", juce::String()), addons.getProperty ("ir_path", juce::String()));               
+    bool modelLoaded = audioProcessor.loadFromPreset(addons.getProperty ("model_path", juce::String()), addons.getProperty ("ir_path", juce::String()));               
     
     //Check the processor for Model and IR status after loading preset.
     if(audioProcessor.getLastModelPath() != "null")
@@ -417,6 +419,6 @@ void NamEditor::updateAfterPresetLoad()
         irNameBox->setText("");
     }
 
-    clearModelButton->setVisible(audioProcessor.getNamModelStatus());       
+    clearModelButton->setVisible(modelLoaded); // Fix this!!!
     clearIrButton->setVisible(audioProcessor.getIrStatus()); 
 }

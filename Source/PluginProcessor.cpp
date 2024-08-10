@@ -143,9 +143,11 @@ void NamJUCEAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     }
 }
 
-void NamJUCEAudioProcessor::loadFromPreset(juce::String modelPath, juce::String irPath)
+bool NamJUCEAudioProcessor::loadFromPreset(juce::String modelPath, juce::String irPath)
 {
     this->suspendProcessing(true);
+
+    bool modelLoaded = false;
     
     if(modelPath != "null")
     {
@@ -161,6 +163,7 @@ void NamJUCEAudioProcessor::loadFromPreset(juce::String modelPath, juce::String 
             myNAM.loadModel(modelPath.toStdString());
             lastModelPath = modelPath.toStdString();
             lastModelName = fileCheck.getFileNameWithoutExtension().toStdString();
+            modelLoaded = true;
         }
     }
     else
@@ -201,13 +204,16 @@ void NamJUCEAudioProcessor::loadFromPreset(juce::String modelPath, juce::String 
     DBG("Loaded: \nModel: " + lastModelName + "\nIR: " + lastIrName);
 
     this->suspendProcessing(false);
+
+    return modelLoaded;
 }
 
-void NamJUCEAudioProcessor::loadNamModel(juce::File modelToLoad)
+bool NamJUCEAudioProcessor::loadNamModel(juce::File modelToLoad)
 {
+    bool modelLoaded = false;
     std::string model_path = modelToLoad.getFullPathName().toStdString();
     this->suspendProcessing(true);
-    myNAM.loadModel(model_path);
+    modelLoaded = myNAM.loadModel(model_path);
     this->suspendProcessing(false);
 
     lastModelPath = model_path;
@@ -215,6 +221,8 @@ void NamJUCEAudioProcessor::loadNamModel(juce::File modelToLoad)
 
     auto addons = apvts.state.getOrCreateChildWithName ("addons", nullptr);
     addons.setProperty ("model_path", juce::String(lastModelPath), nullptr);
+
+    return modelLoaded;
 }
 
 bool NamJUCEAudioProcessor::getTriggerStatus()

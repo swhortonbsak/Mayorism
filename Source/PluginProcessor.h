@@ -53,7 +53,7 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    void loadNamModel(juce::File modelToLoad);
+    bool loadNamModel(juce::File modelToLoad);
     bool getNamModelStatus();
     void clearNAM();
     
@@ -87,7 +87,7 @@ public:
 
     bool eqModuleVisible {false};
 
-    void loadFromPreset(juce::String modelPath, juce::String irPath);
+    bool loadFromPreset(juce::String modelPath, juce::String irPath);
 
 
 private:
