@@ -5,7 +5,7 @@
 NamJUCEAudioProcessorEditor::NamJUCEAudioProcessorEditor (NamJUCEAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), namEditor(p)
 {
-    setResizeLimits(int(0.8*950), int(0.8*650), 950, 650);
+    setResizeLimits(949, 649, 950, 650);
     setResizable(false, false);
 
     setSize (950, 650);
@@ -52,6 +52,7 @@ void NamJUCEAudioProcessorEditor::setPluginSize(bool makeSmall)
 {
     if(makeSmall)
     {
+        setResizeLimits(int(0.8*950), int(0.8*650), 950, 650);
         namEditor.setScaleFactor(0.8);
         setSize (int(950 * 0.8), int(650 * 0.8));
         resizeButton->setBounds(getWidth() - 40, getHeight() - 70, 30, 30);
@@ -59,6 +60,7 @@ void NamJUCEAudioProcessorEditor::setPluginSize(bool makeSmall)
     }
     else
     {
+        setResizeLimits(949, 649, 950, 650);
         namEditor.setScaleFactor(1.0);
         setSize (950, 650);
         resizeButton->setBounds(getWidth() - 40, getHeight() - 75, 30, 30);
