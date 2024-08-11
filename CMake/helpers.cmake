@@ -82,7 +82,7 @@ function(init_juce)
         if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Modules/JUCE/modules")
             message("Failed to initialize ${CMAKE_CURRENT_SOURCE_DIR}/Modules/JUCE\n")
         else()
-            message("JUCE submodule Initialized!\n")
+            message("\nJUCE submodule Initialized!\n")
         endif()
 
     endif()

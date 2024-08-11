@@ -121,6 +121,17 @@ target_compile_definitions(${PROJECT_NAME}
         JUCE_MODAL_LOOPS_PERMITTED=1
         PLUG_VERSION="${PLUGIN_VERSION}")     
 
+if(ASIO_PATH)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_ASIO=1)
+        message(STATUS "Set ASIO flag")
+        target_include_directories(${PROJECT_NAME} PUBLIC ${ASIO_PATH})
+        message(STATUS "\nAdded ASIO SDK to target include directories\n")
+    else()
+        message(STATUS "\nASIO not supported on this OS, ignoring the ASIO Flag...\n")
+    endif()
+endif()
+
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         BinaryData
