@@ -4,7 +4,7 @@ A JUCE implementation of Steven Atkinson's [NeuralAmpModelerPlugin](https://gith
 
 </br>
 <p align="center">
-    <img src="https://i.allthepics.net/2024/08/11/nam-juce.gif" alt="animated" />
+    <img src="https://i.allthepics.net/2024/08/11/namjuce.gif" alt="animated" />
 </p>
 
 
