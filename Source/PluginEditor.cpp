@@ -52,7 +52,7 @@ void NamJUCEAudioProcessorEditor::setPluginSize(bool makeSmall)
 {
     if(makeSmall)
     {
-        setResizeLimits(int(0.8*950), int(0.8*650), 950, 650);
+        setResizeLimits(int(0.8*950) - 1, int(0.8*650) - 1, int(0.8*950), int(0.8*650));
         namEditor.setScaleFactor(0.8);
         setSize (int(950 * 0.8), int(650 * 0.8));
         resizeButton->setBounds(getWidth() - 40, getHeight() - 70, 30, 30);
