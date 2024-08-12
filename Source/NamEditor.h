@@ -5,6 +5,7 @@
 #include "AssetManager.h"
 #include "EqEditor.h"
 #include "TopBarComponent.h"
+#include "LedButtonComponent.h"
 
 #define NUM_SLIDERS 9
 
@@ -61,7 +62,8 @@ private:
     std::unique_ptr<juce::ToggleButton> toneStackToggle, normalizeToggle, irToggle;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> toneStackToggleAttachment, normalizeToggleAttachment, irToggleAttachment;
 
-    std::unique_ptr<juce::ImageButton> toneStackButton, normalizeButton, irButton, loadModelButton, loadIRButton, clearIrButton, clearModelButton, eqButton;
+    std::unique_ptr<juce::ImageButton> loadModelButton, loadIRButton, clearIrButton, clearModelButton;
+    std::unique_ptr<LedButtonComponent> toneStackButton, normalizeButton, irButton, eqButton; 
     juce::Image xIcon = juce::ImageFileFormat::loadFrom(BinaryData::xIcon_png, BinaryData::xIcon_pngSize);
 
     //// TODO: Move this into a dedicated component with its own timer

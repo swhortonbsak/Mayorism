@@ -2,13 +2,14 @@ file(GLOB SRC_FILES
     "Buttons/*.png"
     "EQ/*.png"
     "PresetManagerAssets/*.png"
+    "ButtonLabels/*.png"
 )
 
 juce_add_binary_data(BinaryData SOURCES
     knob.png
     background.png
-    buttonPressed.png
-    buttonUnpressed.png
+    buttonpushed.png
+    buttonunpushed.png
     screens.png
     arrowexpand.png
     arrowcontract.png

@@ -64,7 +64,7 @@ NamEditor::NamEditor(NamJUCEAudioProcessor& p)
     //Tone Stack Toggle
     toneStackToggle.reset(new juce::ToggleButton("ToneStackToggleButton"));
     addAndMakeVisible(toneStackToggle.get());
-    toneStackToggle->setBounds(sliders[PluginKnobs::Bass]->getX() + 30, sliders[PluginKnobs::Bass]->getY() + knobSize + 50, 100, 40);
+    toneStackToggle->setBounds(sliders[PluginKnobs::Bass]->getX() + 30, sliders[PluginKnobs::Bass]->getY() + knobSize + 50, 90, 40);
     toneStackToggle->setButtonText("Tone Stack");
     toneStackToggle->onClick = [this]{setToneStackEnabled(bool(*audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID")));};
     toneStackToggle->setVisible(false);
@@ -75,14 +75,14 @@ NamEditor::NamEditor(NamJUCEAudioProcessor& p)
     //Normalize Toggle
     normalizeToggle.reset(new juce::ToggleButton("NormalizeToggleButton"));
     addAndMakeVisible(normalizeToggle.get());
-    normalizeToggle->setBounds(toneStackToggle->getX() + 120, toneStackToggle->getY(), 100, 40);
+    normalizeToggle->setBounds(toneStackToggle->getX() + 120, toneStackToggle->getY(), 90, 40);
     normalizeToggle->setButtonText("Normalize");
     normalizeToggle->setVisible(false);
 
     //IR Toggle
     irToggle.reset(new juce::ToggleButton("IRToggleButton"));
     addAndMakeVisible(irToggle.get());
-    irToggle->setBounds(normalizeToggle->getX() + 120, normalizeToggle->getY(), 100, 40);
+    irToggle->setBounds(normalizeToggle->getX() + 120, normalizeToggle->getY(), 90, 40);
     irToggle->setButtonText("IR");
     irToggle->setVisible(false);
 
@@ -147,40 +147,40 @@ NamEditor::NamEditor(NamJUCEAudioProcessor& p)
         irNameBox->setCaretPosition(0);
     }    
 
-    toneStackButton.reset(new juce::ImageButton("ToneStackButton"));
+    assetManager->initializeButton(toneStackButton, AssetManager::Buttons::TONESTACK_BUTTON);
     addAndMakeVisible(toneStackButton.get());
-    toneStackButton->setBounds(sliders[PluginKnobs::Middle]->getX() + (sliders[PluginKnobs::Middle]->getWidth() / 2) - 50, sliders[PluginKnobs::Middle]->getY() + sliders[PluginKnobs::Middle]->getHeight() + 15, 100, 40);
-    assetManager->setToggleButton(toneStackButton, *audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID"), AssetManager::Buttons::TONESTACK_BUTTON);
+    toneStackButton->setBounds(sliders[PluginKnobs::Middle]->getX() + (sliders[PluginKnobs::Middle]->getWidth() / 2) - 45, sliders[PluginKnobs::Middle]->getY() + sliders[PluginKnobs::Middle]->getHeight() + 15, 90, 40);
+    toneStackButton->setLedState(*audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID"));
     toneStackButton->onClick = [this]
     {
         toneStackToggle->setToggleState(!toneStackToggle->getToggleState(), true);
-        assetManager->setToggleButton(toneStackButton, *audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID"), AssetManager::Buttons::TONESTACK_BUTTON);
+        toneStackButton->setLedState(*audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID"));
     };
 
-    normalizeButton.reset(new juce::ImageButton("NormalizeButton"));
+    assetManager->initializeButton(normalizeButton, AssetManager::Buttons::NORMALIZE_BUTTON);
     addAndMakeVisible(normalizeButton.get());
-    normalizeButton->setBounds(sliders[PluginKnobs::Treble]->getX() + (sliders[PluginKnobs::Treble]->getWidth() / 2) - 50, sliders[PluginKnobs::Treble]->getY() + sliders[PluginKnobs::Treble]->getHeight() + 15, 100, 40);
-    assetManager->setToggleButton(normalizeButton, *audioProcessor.apvts.getRawParameterValue("NORMALIZE_ID"), AssetManager::Buttons::NORMALIZE_BUTTON);
+    normalizeButton->setBounds(sliders[PluginKnobs::Treble]->getX() + (sliders[PluginKnobs::Treble]->getWidth() / 2) - 45, sliders[PluginKnobs::Treble]->getY() + sliders[PluginKnobs::Treble]->getHeight() + 15, 90, 40);
+    normalizeButton->setLedState(*audioProcessor.apvts.getRawParameterValue("NORMALIZE_ID"));
     normalizeButton->onClick = [this]
     {
         normalizeToggle->setToggleState(!normalizeToggle->getToggleState(), true);
-        assetManager->setToggleButton(normalizeButton, *audioProcessor.apvts.getRawParameterValue("NORMALIZE_ID"), AssetManager::Buttons::NORMALIZE_BUTTON);
+        normalizeButton->setLedState(*audioProcessor.apvts.getRawParameterValue("NORMALIZE_ID"));
     };
 
-    irButton.reset(new juce::ImageButton("irButton"));
+    assetManager->initializeButton(irButton, AssetManager::Buttons::IR_BUTTON);
     addAndMakeVisible(irButton.get());
-    irButton->setBounds(sliders[PluginKnobs::Output]->getX() + (sliders[PluginKnobs::Output]->getWidth() / 2) - 50, sliders[PluginKnobs::Output]->getY() + sliders[PluginKnobs::Output]->getHeight() + 15, 100, 40);
-    assetManager->setToggleButton(irButton, *audioProcessor.apvts.getRawParameterValue("CAB_ON_ID"), AssetManager::Buttons::IR_BUTTON);
+    irButton->setBounds(sliders[PluginKnobs::Output]->getX() + (sliders[PluginKnobs::Output]->getWidth() / 2) - 45, sliders[PluginKnobs::Output]->getY() + sliders[PluginKnobs::Output]->getHeight() + 15, 90, 40);
+    irButton->setLedState(*audioProcessor.apvts.getRawParameterValue("CAB_ON_ID"));
     irButton->onClick = [this]
     {
         irToggle->setToggleState(!irToggle->getToggleState(), true);
-        assetManager->setToggleButton(irButton, *audioProcessor.apvts.getRawParameterValue("CAB_ON_ID"), AssetManager::Buttons::IR_BUTTON);
+        irButton->setLedState(*audioProcessor.apvts.getRawParameterValue("CAB_ON_ID"));
     };
 
-    eqButton.reset(new juce::ImageButton("EQButton"));
+    assetManager->initializeButton(eqButton, AssetManager::Buttons::EQ_BUTTON);
     addAndMakeVisible(eqButton.get());
-    eqButton->setBounds(sliders[PluginKnobs::NoiseGate]->getX() + (sliders[PluginKnobs::NoiseGate]->getWidth() / 2) - 50, sliders[PluginKnobs::NoiseGate]->getY() + sliders[PluginKnobs::NoiseGate]->getHeight() + 15, 100, 40);
-    assetManager->setToggleButton(eqButton, *audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"), AssetManager::Buttons::EQ_BUTTON);
+    eqButton->setBounds(sliders[PluginKnobs::NoiseGate]->getX() + (sliders[PluginKnobs::NoiseGate]->getWidth() / 2) - 45, sliders[PluginKnobs::NoiseGate]->getY() + sliders[PluginKnobs::NoiseGate]->getHeight() + 15, 90, 40);
+    eqButton->setLedState(*audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"));
     eqButton->setAlwaysOnTop(true);
     eqButton->toFront(false);
     
@@ -194,23 +194,25 @@ NamEditor::NamEditor(NamJUCEAudioProcessor& p)
         if (modifiers.isShiftDown() && !audioProcessor.eqModuleVisible)
         {
             eqEditor.toggleEq();
-            assetManager->setToggleButton(eqButton, *audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"), AssetManager::Buttons::EQ_BUTTON);            
+            eqButton->setLedState(*audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"));
         }
         else
         {
-            //toneStackToggle->setToggleState(!toneStackToggle->getToggleState(), true);
             audioProcessor.eqModuleVisible = !audioProcessor.eqModuleVisible;
             eqEditor.setVisible(audioProcessor.eqModuleVisible);
 
             if(audioProcessor.eqModuleVisible)
             {
+                eqButton->setLabelVisible(false);
                 eqButton->setBounds(getWidth() - 43, 25, 20, 20);
                 eqButton->setImages(false, true, false, xIcon, 0.7f, juce::Colours::transparentWhite, xIcon, 1.0f, juce::Colours::transparentWhite, xIcon, 0.65f, juce::Colours::transparentWhite, 0);
             }
             else
             {
-                eqButton->setBounds(sliders[PluginKnobs::NoiseGate]->getX() + (sliders[PluginKnobs::NoiseGate]->getWidth() / 2) - 50, sliders[PluginKnobs::NoiseGate]->getY() + sliders[PluginKnobs::NoiseGate]->getHeight() + 15, 100, 40);
-                assetManager->setToggleButton(eqButton, *audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"), AssetManager::Buttons::EQ_BUTTON);
+                eqButton->setLabelVisible(true);
+                eqButton->reloadImages();
+                eqButton->setBounds(sliders[PluginKnobs::NoiseGate]->getX() + (sliders[PluginKnobs::NoiseGate]->getWidth() / 2) - 45, sliders[PluginKnobs::NoiseGate]->getY() + sliders[PluginKnobs::NoiseGate]->getHeight() + 15, 90, 40);
+                eqButton->setLedState(*audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"));
             }
 
             setMeterPosition(!audioProcessor.eqModuleVisible);
@@ -376,17 +378,27 @@ void NamEditor::setMeterPosition(bool isOnMainScreen)
 
 void NamEditor::updateAfterPresetLoad()
 {
+    
     if(audioProcessor.eqModuleVisible)
+    {
+        eqButton->setLabelVisible(false);
         eqButton->setImages(false, true, false, xIcon, 0.7f, juce::Colours::transparentWhite, xIcon, 1.0f, juce::Colours::transparentWhite, xIcon, 0.65f, juce::Colours::transparentWhite, 0);
+    }
     else
-        assetManager->setToggleButton(eqButton, *audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"), AssetManager::Buttons::EQ_BUTTON);
+    {
+        eqButton->setLedState(*audioProcessor.apvts.getRawParameterValue("EQ_BYPASS_STATE_ID"));
+        eqButton->setLabelVisible(true);
+        eqButton->reloadImages();
+    }
+    
 
     eqEditor.updateGraphics();
 
-    assetManager->setToggleButton(normalizeButton, *audioProcessor.apvts.getRawParameterValue("NORMALIZE_ID"), AssetManager::Buttons::NORMALIZE_BUTTON);
-    assetManager->setToggleButton(toneStackButton, *audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID"), AssetManager::Buttons::TONESTACK_BUTTON);
     setToneStackEnabled(bool(*audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID")));
-    assetManager->setToggleButton(irButton, *audioProcessor.apvts.getRawParameterValue("CAB_ON_ID"), AssetManager::Buttons::IR_BUTTON);
+
+    normalizeButton->setLedState(*audioProcessor.apvts.getRawParameterValue("NORMALIZE_ID"));
+    toneStackButton->setLedState(*audioProcessor.apvts.getRawParameterValue("TONE_STACK_ON_ID"));
+    irButton->setLedState(*audioProcessor.apvts.getRawParameterValue("CAB_ON_ID"));
 
     auto addons = audioProcessor.apvts.state.getOrCreateChildWithName ("addons", nullptr);
     //DBG(addons.getProperty ("model_path", juce::String()).toString());
