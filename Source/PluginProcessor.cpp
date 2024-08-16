@@ -225,11 +225,14 @@ void NamJUCEAudioProcessor::loadNamModel(juce::File modelToLoad)
     namModelLoaded = myNAM.loadModel(model_path);
     this->suspendProcessing(false);
 
+    auto addons = apvts.state.getOrCreateChildWithName ("addons", nullptr);    
     lastModelPath = model_path;
     lastModelName = modelToLoad.getFileNameWithoutExtension().toStdString();
-
-    auto addons = apvts.state.getOrCreateChildWithName ("addons", nullptr);
     addons.setProperty ("model_path", juce::String(lastModelPath), nullptr);
+
+    auto search_paths = apvts.state.getOrCreateChildWithName ("search_paths", nullptr);
+    lastModelSerachDir = modelToLoad.getParentDirectory().getFullPathName().toStdString();
+    search_paths.setProperty ("LastModelSearchDir", juce::String(lastModelSerachDir), nullptr);
 }
 
 bool NamJUCEAudioProcessor::getTriggerStatus()
@@ -268,11 +271,15 @@ void NamJUCEAudioProcessor::loadImpulseResponse(juce::File irToLoad)
     cab.loadImpulseResponse(irToLoad, juce::dsp::Convolution::Stereo::no, juce::dsp::Convolution::Trim::no, 0, juce::dsp::Convolution::Normalise::yes);
     irLoaded = true;
     irFound = true;
+    
+    auto addons = apvts.state.getOrCreateChildWithName ("addons", nullptr);        
     lastIrPath = ir_path;
     lastIrName = irToLoad.getFileNameWithoutExtension().toStdString();
-
-    auto addons = apvts.state.getOrCreateChildWithName ("addons", nullptr);    
     addons.setProperty ("ir_path", juce::String(lastIrPath), nullptr);
+
+    auto search_paths = apvts.state.getOrCreateChildWithName ("search_paths", nullptr);
+    lastIrSerachDir = irToLoad.getParentDirectory().getFullPathName().toStdString();    
+    search_paths.setProperty ("LastIrSearchDir", juce::String(lastIrSerachDir), nullptr);
 
     this->suspendProcessing(false);
 }
@@ -405,6 +412,10 @@ void NamJUCEAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     xml->setAttribute("ModelName", lastModelName);
     xml->setAttribute("IRPath", lastIrPath);
     xml->setAttribute("IRName", lastIrName);
+    xml->addTextElement("LastModelSearchDir");
+    xml->setAttribute("LastModelSearchDir", lastModelSerachDir);
+    xml->addTextElement("LastIrSearchDir");
+    xml->setAttribute("LastIrSearchDir", lastIrSerachDir);
 
     copyXmlToBinary(*xml, destData);
 }
@@ -461,7 +472,41 @@ void NamJUCEAudioProcessor::setStateInformation (const void* data, int sizeInByt
                 lastIrPath = "null";
                 lastIrName = "";
                 irFound = false;
-            }               
+            }
+            
+            //Try to load last Model Search Directory
+            try
+            {
+                lastModelSerachDir = xmlState->getStringAttribute("LastModelSearchDir").toStdString();
+
+                if(lastModelSerachDir != "null")
+                {
+                    juce::File fileCheck{lastModelSerachDir};
+                    if(!fileCheck.exists())                    
+                        lastModelSerachDir = "null";                                       
+                }                  
+            }
+            catch(const std::exception& e)
+            {
+                lastModelSerachDir = "null";
+            }     
+
+            //Try to load last IR Search Directory
+            try
+            {
+                lastIrSerachDir = xmlState->getStringAttribute("LastIrSearchDir").toStdString();
+
+                if(lastIrSerachDir != "null")
+                {
+                    juce::File fileCheck{lastIrSerachDir};
+                    if(!fileCheck.exists())                    
+                        lastIrSerachDir = "null";                                       
+                }                  
+            }
+            catch(const std::exception& e)
+            {
+                lastIrSerachDir = "null";
+            }          
         }
 }
 
@@ -487,26 +532,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout NamJUCEAudioProcessor::creat
 bool NamJUCEAudioProcessor::supportsDoublePrecisionProcessing() const
 {
     return supportsDouble;
-}
-
-const std::string NamJUCEAudioProcessor::getLastModelPath()
-{
-    return lastModelPath;
-}
-
-const std::string NamJUCEAudioProcessor::getLastModelName()
-{
-    return lastModelName;
-}
-
-const std::string NamJUCEAudioProcessor::getLastIrPath()
-{
-    return lastIrPath;
-}
-
-const std::string NamJUCEAudioProcessor::getLastIrName()
-{
-    return lastIrName;
 }
 
 //==============================================================================

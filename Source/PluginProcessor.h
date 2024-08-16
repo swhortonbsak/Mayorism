@@ -65,10 +65,12 @@ public:
 
     bool supportsDoublePrecisionProcessing() const override;
 
-    const std::string getLastModelPath();
-    const std::string getLastModelName();
-    const std::string getLastIrPath();
-    const std::string getLastIrName();
+    const std::string getLastModelPath(){ return lastModelPath; };
+    const std::string getLastModelName(){ return lastModelName; };
+    const std::string getLastIrPath(){ return lastIrPath; };
+    const std::string getLastIrName(){ return lastIrName; };
+    const std::string getLastModelSearchDirectory() { return lastModelSerachDir; };
+    const std::string getLastIrSearchDirectory() { return lastIrSerachDir; };
 
     foleys::LevelMeterSource& getMeterInSource()
     {
@@ -114,6 +116,9 @@ private:
 
     std::string lastIrPath = "null";
     std::string lastIrName = "null";
+
+    std::string lastModelSerachDir = "null";
+    std::string lastIrSerachDir = "null";
 
     bool namModelLoaded {false};
 

@@ -36,6 +36,11 @@ void PresetManager::savePreset(const juce::String& presetName)
 
     currentPreset.setValue(presetName);
     const auto stateXML = apvts.copyState().createXml();
+    
+    // Stuff to exclude from preset file
+    auto search_paths = stateXML->getChildByName("search_paths");
+    stateXML->removeChildElement(search_paths, true);
+
     const auto presetFile = defaultPresetDirectory.getChildFile(presetName + "." + presetExtension);
     if (!stateXML->writeTo(presetFile))
     {

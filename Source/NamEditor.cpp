@@ -288,7 +288,10 @@ void NamEditor::setToneStackEnabled(bool toneStackEnabled)
 
 void NamEditor::loadModelButtonClicked()
 {
-    juce::FileChooser chooser("Choose an model to load", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.nam", true, false);
+    auto searchLocation = audioProcessor.getLastModelSearchDirectory() == "null" ? juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
+        : juce::File(audioProcessor.getLastModelSearchDirectory());
+
+    juce::FileChooser chooser("Choose an model to load", searchLocation, "*.nam", true, false);
     
     if (chooser.browseForFileToOpen())
     {		
@@ -305,7 +308,10 @@ void NamEditor::loadModelButtonClicked()
 
 void NamEditor::loadIrButtonClicked()
 {
-    juce::FileChooser chooser("Choose an IR to load", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav", true, false);
+    auto searchLocation = audioProcessor.getLastIrSearchDirectory() == "null" ? juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
+        : juce::File(audioProcessor.getLastIrSearchDirectory());
+
+    juce::FileChooser chooser("Choose an IR to load", searchLocation, "*.wav", true, false);
 
     if (chooser.browseForFileToOpen())
     {		
