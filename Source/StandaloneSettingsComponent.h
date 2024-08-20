@@ -42,7 +42,11 @@ public:
         deviceSelector.setLookAndFeel(&settingsLookdAndFeel);
     }
 
-    void paint(Graphics& g) override { g.fillAll(juce::Colour::fromString("FF121212")); }
+    void paint(Graphics& g) override
+    {
+        g.fillAll(juce::Colour::fromString("FF2E2E2E"));
+        //g.fillAll(juce::Colours::darkgrey);
+    };
 
     void resized() override
     {
