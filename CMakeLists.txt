@@ -111,6 +111,12 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(amd64)|(AMD64)|(x86_64)")
 	endif (USE_NATIVE_ARCH)
 endif ()
 
+if (BETA_RELEASE)
+    set(PLUG_VERSION "${PLUGIN_VERSION} BETA")
+else()
+    set(PLUG_VERSION "${PLUGIN_VERSION}")
+endif()
+
 target_compile_definitions(${PROJECT_NAME}
     PUBLIC
         # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
@@ -119,7 +125,8 @@ target_compile_definitions(${PROJECT_NAME}
         JUCE_VST3_CAN_REPLACE_VST2=0
         JUCE_DISPLAY_SPLASH_SCREEN=0
         JUCE_MODAL_LOOPS_PERMITTED=1
-        PLUG_VERSION="${PLUGIN_VERSION}")     
+        PLUG_VERSION="${PLUG_VERSION}"
+    )     
 
 if(ASIO_PATH)
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
