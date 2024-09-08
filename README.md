@@ -15,6 +15,8 @@ git clone https://github.com/tr3m/nam-juce
 cd nam-juce
 ```
 
+Git sumbodules dont need to be initialized manually. CMake will initialize the appropriate submodules depending on the defined flags.
+
 ### Windows
 
 ```bash
@@ -37,7 +39,7 @@ cmake -B build
 cmake --build build -- -j $(nproc)
 ```
 
-Git sumbodules dont need to be initialized manually. CMake will initialize the appropriate submodules depending on the defined flags.
+Linux dependencies for JUCE can be found [here](https://github.com/juce-framework/JUCE/blob/master/docs/Linux%20Dependencies.md). Keep in mind that the packages they list are meant for Ubuntu, so you might have to do your own research depending on your distro.
 
 ### Optional CMake Flags
 
