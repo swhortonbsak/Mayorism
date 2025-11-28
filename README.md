@@ -111,3 +111,10 @@ More plugin formats like LV2 and Legacy VST can be built by providing the approp
 
 ## <a id="getting-models"></a> Getting Models
 You can find Models and Impulse Responses shared by the community on [ToneHunt](https://tonehunt.org).
+
+------
+
+- remove tonestack toggle
+- remove normalize toggle
+- decouple tone stack and doubler + gate from UI (NUMSLIDERS ARRAY)
+- add two new buttons for master input and output

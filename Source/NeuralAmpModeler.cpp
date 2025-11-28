@@ -49,10 +49,6 @@ void NeuralAmpModeler::processBlock(juce::AudioBuffer<float> &buffer) {
     mModel->process(*inputPointer, *outputPointer, buffer.getNumSamples());
     mModel->finalize_(buffer.getNumSamples());
 
-    // Normalize loudness
-    if (this->outputNormalized)
-      normalizeOutput(outputPointer, 1, buffer.getNumSamples());
-
     processedOutput = outputPointer;
   } else {
     processedOutput = inputPointer;
@@ -66,10 +62,7 @@ void NeuralAmpModeler::processBlock(juce::AudioBuffer<float> &buffer) {
 
   // Tone Stack
   float **toneStackOutPointers =
-      toneStackActive
-          ? mToneStack->Process(gateGainOutput, 1, buffer.getNumSamples())
-          : gateGainOutput;
-
+      mToneStack->Process(gateGainOutput, 1, buffer.getNumSamples());
   doDualMono(buffer, toneStackOutPointers);
 
   // Output Gain
@@ -179,40 +172,16 @@ void NeuralAmpModeler::resetModel() {
     mModel->Reset(this->sampleRate, this->samplesPerBlock);
 }
 
-void NeuralAmpModeler::normalizeOutput(float **input, int numChannels,
-                                       int numSamples) {
-  if (!mModel)
-    return;
-  if (!mModel->HasLoudness())
-    return;
-
-  const double loudness = mModel->GetLoudness();
-  const double targetLoudness = -18.0;
-  const double gain = pow(10.0, (targetLoudness - loudness) / 20.0);
-
-  for (int c = 0; c < numChannels; c++) {
-    for (int f = 0; f < numSamples; f++) {
-      input[c][f] *= gain;
-    }
-  }
-}
-
 void NeuralAmpModeler::updateParameters() {
-  outputNormalized = bool(params[Parameters::kOutNorm]->load());
-
-  // Tone Stack
-  toneStackActive = bool(params[Parameters::kEQActive]->load());
 
   // Noise Gate
   noiseGateActive = int(params[Parameters::kNoiseGateThreshold]->load()) < -100
                         ? false
                         : true;
 
-  if (toneStackActive) {
-    mToneStack->SetParam("bass", params[Parameters::kToneBass]->load());
-    mToneStack->SetParam("middle", params[Parameters::kToneMid]->load());
-    mToneStack->SetParam("treble", params[Parameters::kToneTreble]->load());
-  }
+  mToneStack->SetParam("bass", params[Parameters::kToneBass]->load());
+  mToneStack->SetParam("middle", params[Parameters::kToneMid]->load());
+  mToneStack->SetParam("treble", params[Parameters::kToneTreble]->load());
 
   if (noiseGateActive) {
     const dsp::noise_gate::TriggerParams triggerParams(
@@ -238,10 +207,6 @@ void NeuralAmpModeler::createParameters(
       "TREBLE_ID", "TREBLE", 0.0f, 10.0f, 5.0f));
   parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
       "OUTPUT_ID", "OUTPUT", -40.0f, 40.0f, 0.0f));
-  parameters.push_back(std::make_unique<juce::AudioParameterBool>(
-      "TONE_STACK_ON_ID", "TONE_STACK_ON", true, "TONE_STACK_ON"));
-  parameters.push_back(std::make_unique<juce::AudioParameterBool>(
-      "NORMALIZE_ID", "NORMALIZE", false, "NORMALIZE"));
 
   DBG("NAM Parameters Created!");
 }
@@ -255,9 +220,6 @@ void NeuralAmpModeler::hookParameters(
   params[Parameters::kToneMid] = apvts.getRawParameterValue("MIDDLE_ID");
   params[Parameters::kToneTreble] = apvts.getRawParameterValue("TREBLE_ID");
   params[Parameters::kOutputLevel] = apvts.getRawParameterValue("OUTPUT_ID");
-  params[Parameters::kEQActive] =
-      apvts.getRawParameterValue("TONE_STACK_ON_ID");
-  params[Parameters::kOutNorm] = apvts.getRawParameterValue("NORMALIZE_ID");
 
   DBG("NAM Parameters Hooked!");
 }

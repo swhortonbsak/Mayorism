@@ -38,8 +38,6 @@ public:
     kToneMid,
     kToneTreble,
     kOutputLevel,
-    kEQActive,
-    kOutNorm
   };
 
   StatusedTrigger *getTrigger() { return &mNoiseGateTrigger; };
@@ -50,10 +48,7 @@ private:
   juce::AudioBuffer<float> outputBuffer;
 
   // Parameter Pointers
-  std::atomic<float> *params[8];
-
-  bool toneStackActive{true};
-  bool outputNormalized{false};
+  std::atomic<float> *params[6];
   bool noiseGateActive{false};
 
   bool modelLoaded{false};
@@ -81,8 +76,6 @@ private:
   void applyDSPStaging();
 
   void resetModel();
-
-  void normalizeOutput(float **input, int numChannels, int numSamples);
 
   void updateParameters();
   double dB_to_linear(double db_value);
