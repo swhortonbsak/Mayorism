@@ -36,11 +36,7 @@ public:
     Doubler
   };
 
-  enum PageIndex {
-    PRE_EFFECTS = 0,
-    AMP = 1,
-    POST_EFFECTS = 2
-  };
+  enum PageIndex { PRE_EFFECTS = 0, AMP = 1, POST_EFFECTS = 2 };
 
 private:
   std::unique_ptr<CustomSlider> sliders[NUM_SLIDERS];
@@ -80,7 +76,7 @@ private:
   std::unique_ptr<juce::ImageButton> preEffectsPage;
   std::unique_ptr<juce::ImageButton> ampPage;
   std::unique_ptr<juce::ImageButton> postEffectsPage;
-  int currentPage = AMP;  // Default to AMP page
+  int currentPage = AMP; // Default to AMP page
 
   NamJUCEAudioProcessor &audioProcessor;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NamEditor)
@@ -96,4 +92,10 @@ private:
   void setupPageTabs();
   void switchToPage(int pageIndex);
   void updatePageTabHighlight();
+  void setKnobVisibility();
+
+  // Slider initialization functions
+  void initializeTopRow();
+  void initializeAmpSliders();
+  void initializeSliderAttachments();
 };

@@ -127,8 +127,12 @@ More plugin formats like LV2 and Legacy VST can be built by providing the approp
 <!-- - change positioning preset manager -->
 <!-- - style preset manager -->
 <!-- - remove getModels from settings menu -->
-- Refactor slider creation in NamEditor to have an indivudlaa function for toprow initialization + amp knobs initialization
-- show/hide knobs based on page
+<!-- - Refactor slider creation in NamEditor to have an indivudlaa function for toprow initialization + amp knobs initialization -->
+<!-- - show/hide knobs based on page -->
+- implement tube screamer DSP module class
+- add on off functionality for tube screamer
+- create tube screamer sliders
+- create tube screamer on/off knob
 - Fix standalone audio settings to support mono input
 - make dark grey meter take up entire background space
 - Change name of plugin to CraftLabs instead of the original creators name

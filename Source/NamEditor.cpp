@@ -25,6 +25,12 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
   meterIn.setSelectedChannel(0);
   meterOut.setSelectedChannel(0);
 
+  meterIn.toFront(true);
+  meterOut.toFront(true);
+
+  // Initialize meter positions and styling
+  setMeterPosition();
+
   lnf.setColour(Slider::textBoxOutlineColourId,
                 juce::Colours::transparentBlack);
   lnf.setColour(Slider::textBoxBackgroundColourId,
@@ -37,102 +43,11 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
                        juce::Colours::transparentBlack);
   lnfMinimal.setColour(Slider::textBoxTextColourId, juce::Colours::ivory);
 
-  int knobSize = 51;
-  int knobSizeMinimal = 54; // Larger size for minimal knobs (top row)
-  int xStart = 266;
-  int xOffsetMultiplier = 74;
+  initializeTopRow();
 
-  // Setup sliders
-  int positionIndex = 0; // Separate counter for NAM amp controls (Row 2)
-  for (int slider = 0; slider < NUM_SLIDERS; ++slider) {
-    sliders[slider].reset(new CustomSlider());
-    addAndMakeVisible(sliders[slider].get());
+  initializeAmpSliders();
 
-    // Apply different LookAndFeel based on slider type
-    // Top row controls use minimal style, NAM controls use main style
-    if (slider == PluginKnobs::PluginInput ||
-        slider == PluginKnobs::NoiseGate || slider == PluginKnobs::Doubler ||
-        slider == PluginKnobs::PluginOutput) {
-      sliders[slider]->setLookAndFeel(&lnfMinimal);
-    } else {
-      sliders[slider]->setLookAndFeel(&lnf);
-    }
-
-    sliders[slider]->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    sliders[slider]->setTextBoxStyle(juce::Slider::NoTextBox, false, 80, 20);
-    // sliders[slider]->setPopupDisplayEnabled(true, true,
-    // getTopLevelComponent());
-
-    // Position only NAM amp controls in Row 2 (main row)
-    // Exclude Row 1 controls: PluginInput, NoiseGate, Doubler, PluginOutput
-    if (slider != PluginKnobs::PluginInput &&
-        slider != PluginKnobs::NoiseGate && slider != PluginKnobs::Doubler &&
-        slider != PluginKnobs::PluginOutput) {
-      sliders[slider]->setBounds(xStart + (positionIndex * xOffsetMultiplier),
-                                 450, knobSize, knobSize);
-      positionIndex++;
-    }
-  }
-
-  // ========== Row 1 Controls (Utility/Effects) - Manual Positioning ==========
-
-  // PluginInput - leftmost position in Row 1
-  sliders[PluginKnobs::PluginInput]->setBounds(88, 89, knobSizeMinimal,
-                                               knobSizeMinimal);
-  sliders[PluginKnobs::PluginInput]->setCustomSlider(
-      CustomSlider::SliderTypes::PluginInput);
-  sliders[PluginKnobs::PluginInput]->addListener(this);
-
-  // NoiseGate - second position in Row 1
-  sliders[PluginKnobs::NoiseGate]->setBounds(218, 89, knobSizeMinimal,
-                                             knobSizeMinimal);
-  // sliders[PluginKnobs::NoiseGate]->setPopupDisplayEnabled(
-  //     true, true, getTopLevelComponent());
-  sliders[PluginKnobs::NoiseGate]->setCustomSlider(
-      CustomSlider::SliderTypes::Gate);
-  sliders[PluginKnobs::NoiseGate]->addListener(this);
-
-  // Doubler - third position in Row 1
-  // sliders[PluginKnobs::Doubler]->setPopupDisplayEnabled(true, true,
-  //                                                       getTopLevelComponent());
-  sliders[PluginKnobs::Doubler]->setCustomSlider(
-      CustomSlider::SliderTypes::Doubler);
-  sliders[PluginKnobs::Doubler]->setTextBoxStyle(juce::Slider::NoTextBox, false,
-                                                 89, 20);
-  sliders[PluginKnobs::Doubler]->setBounds(674, 89, knobSizeMinimal,
-                                           knobSizeMinimal);
-  sliders[PluginKnobs::Doubler]->addListener(this);
-
-  // PluginOutput - rightmost position in Row 1
-  sliders[PluginKnobs::PluginOutput]->setBounds(804, 89, knobSizeMinimal,
-                                                knobSizeMinimal);
-  sliders[PluginKnobs::PluginOutput]->setCustomSlider(
-      CustomSlider::SliderTypes::PluginOutput);
-  sliders[PluginKnobs::PluginOutput]->addListener(this);
-
-  // Hook slider and button attachments
-  for (int slider = 0; slider < NUM_SLIDERS; ++slider)
-    sliderAttachments[slider] =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-            audioProcessor.apvts, sliderIDs[slider], *sliders[slider]);
-
-  sliderAttachments[PluginKnobs::Doubler] =
-      std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-          audioProcessor.apvts, "DOUBLER_SPREAD_ID",
-          *sliders[PluginKnobs::Doubler]);
-
-  meterIn.toFront(true);
-  meterOut.toFront(true);
-
-  // Initialize meter positions and styling
-  setMeterPosition();
-
-  // Initialize top row knob labels
-  drawKnobLabels();
-
-  // Initialize top row knob value labels
-  drawKnobValueLabels();
-  updateKnobValueLabels(); // Show initial values
+  initializeSliderAttachments();
 
   addAndMakeVisible(&pmc);
   pmc.setColour(juce::Colours::transparentWhite, 0.0f);
@@ -140,6 +55,7 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
   addAndMakeVisible(&topBar);
 
   setupPageTabs();
+  setKnobVisibility(); // Set initial visibility based on default page
 }
 
 NamEditor::~NamEditor() {
@@ -333,12 +249,44 @@ void NamEditor::updatePageTabHighlight() {
   postEffectsPage->setAlpha(currentPage == POST_EFFECTS ? 1.0f : 0.5f);
 }
 
+void NamEditor::setKnobVisibility() {
+  switch (currentPage) {
+  case PRE_EFFECTS:
+    // Hide amp controls on pre-effects page
+    sliders[PluginKnobs::Input]->setVisible(false);
+    sliders[PluginKnobs::Bass]->setVisible(false);
+    sliders[PluginKnobs::Middle]->setVisible(false);
+    sliders[PluginKnobs::Treble]->setVisible(false);
+    sliders[PluginKnobs::Output]->setVisible(false);
+    break;
+
+  case AMP:
+    // Show amp controls on amp page
+    sliders[PluginKnobs::Input]->setVisible(true);
+    sliders[PluginKnobs::Bass]->setVisible(true);
+    sliders[PluginKnobs::Middle]->setVisible(true);
+    sliders[PluginKnobs::Treble]->setVisible(true);
+    sliders[PluginKnobs::Output]->setVisible(true);
+    break;
+
+  case POST_EFFECTS:
+    // Hide amp controls on post-effects page
+    sliders[PluginKnobs::Input]->setVisible(false);
+    sliders[PluginKnobs::Bass]->setVisible(false);
+    sliders[PluginKnobs::Middle]->setVisible(false);
+    sliders[PluginKnobs::Treble]->setVisible(false);
+    sliders[PluginKnobs::Output]->setVisible(false);
+    break;
+  }
+}
+
 void NamEditor::switchToPage(int pageIndex) {
   if (pageIndex < 0 || pageIndex > 2)
     return;
 
   currentPage = pageIndex;
   updatePageTabHighlight();
+  setKnobVisibility();
   repaint();
 }
 
@@ -391,4 +339,106 @@ void NamEditor::setupPageTabs() {
 
   // Set initial highlight state (AMP page is default)
   updatePageTabHighlight();
+}
+
+void NamEditor::initializeTopRow() {
+
+  // --- initialize sliders ---
+
+  const int knobSizeMinimal = 54;
+
+  // Define top row slider configurations
+  struct TopRowSliderConfig {
+    PluginKnobs knobId;
+    int x;
+    int y;
+    CustomSlider::SliderTypes sliderType;
+  };
+
+  const TopRowSliderConfig configs[] = {
+      {PluginKnobs::PluginInput, 88, 89,
+       CustomSlider::SliderTypes::PluginInput},
+      {PluginKnobs::NoiseGate, 218, 89, CustomSlider::SliderTypes::Gate},
+      {PluginKnobs::Doubler, 674, 89, CustomSlider::SliderTypes::Doubler},
+      {PluginKnobs::PluginOutput, 804, 89,
+       CustomSlider::SliderTypes::PluginOutput}};
+
+  for (const auto &config : configs) {
+    auto &slider = sliders[config.knobId];
+
+    // Basic setup
+    slider.reset(new CustomSlider());
+    addAndMakeVisible(slider.get());
+
+    // Apply minimal look and feel
+    slider->setLookAndFeel(&lnfMinimal);
+    slider->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    slider->setTextBoxStyle(juce::Slider::NoTextBox, false, 80, 20);
+
+    // Position and customize
+    slider->setBounds(config.x, config.y, knobSizeMinimal, knobSizeMinimal);
+    slider->setCustomSlider(config.sliderType);
+    slider->addListener(this);
+  }
+
+  // Initialize top row knob labels
+  drawKnobLabels();
+
+  // Initialize top row knob value labels
+  drawKnobValueLabels();
+  updateKnobValueLabels(); // Show initial values
+}
+
+void NamEditor::initializeAmpSliders() {
+  const int knobSize = 51;
+  const int xStart = 266;
+  const int xOffsetMultiplier = 74;
+  const int yPosition = 450;
+
+  // Collect all amp control knob IDs (excluding top row)
+  std::vector<int> ampKnobs;
+  for (int slider = 0; slider < NUM_SLIDERS; ++slider) {
+    if (slider != PluginKnobs::PluginInput &&
+        slider != PluginKnobs::NoiseGate && slider != PluginKnobs::Doubler &&
+        slider != PluginKnobs::PluginOutput) {
+      ampKnobs.push_back(slider);
+    }
+  }
+
+  // Initialize amp sliders
+  int positionIndex = 0;
+  for (int knobId : ampKnobs) {
+    auto &slider = sliders[knobId];
+
+    // Basic setup
+    slider.reset(new CustomSlider());
+    addAndMakeVisible(slider.get());
+
+    // Apply main look and feel
+    slider->setLookAndFeel(&lnf);
+    slider->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    slider->setTextBoxStyle(juce::Slider::NoTextBox, false, 80, 20);
+
+    // Position in main row
+    slider->setBounds(xStart + (positionIndex * xOffsetMultiplier), yPosition,
+                      knobSize, knobSize);
+
+    slider->addListener(this);
+    positionIndex++;
+  }
+}
+
+void NamEditor::initializeSliderAttachments() {
+  // Hook slider attachments
+  for (int slider = 0; slider < NUM_SLIDERS; ++slider) {
+    sliderAttachments[slider] =
+        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+            audioProcessor.apvts, sliderIDs[slider], *sliders[slider]);
+  }
+
+  // Special case: Doubler uses different parameter ID
+  sliderAttachments[PluginKnobs::Doubler] =
+      std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+          audioProcessor.apvts, "DOUBLER_SPREAD_ID",
+          *sliders[PluginKnobs::Doubler]);
 }
