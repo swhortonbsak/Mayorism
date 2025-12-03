@@ -3,7 +3,14 @@
 NamEditor::NamEditor(NamJUCEAudioProcessor &p)
     : AudioProcessorEditor(&p), audioProcessor(p), topBar(p),
       pmc(p.getPresetManager(), [&]() { updateAfterPresetLoad(); }) {
-  assetManager.reset(new AssetManager());
+
+  // Load page background images
+  backgroundPreEffects = juce::ImageFileFormat::loadFrom(
+      BinaryData::backgroundpre_png, BinaryData::backgroundpre_pngSize);
+  backgroundAmp = juce::ImageFileFormat::loadFrom(
+      BinaryData::backgroundamp_png, BinaryData::backgroundamp_pngSize);
+  backgroundPostEffects = juce::ImageFileFormat::loadFrom(
+      BinaryData::backgroundpost_png, BinaryData::backgroundpost_pngSize);
 
   // Meters
   meterIn.setMeterSource(&audioProcessor.getMeterInSource());
@@ -18,11 +25,6 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
   meterIn.setSelectedChannel(0);
   meterOut.setSelectedChannel(0);
 
-  int knobSize = 51;
-  int knobSizeMinimal = 54; // Larger size for minimal knobs (top row)
-  int xStart = 266;
-  int xOffsetMultiplier = 74;
-
   lnf.setColour(Slider::textBoxOutlineColourId,
                 juce::Colours::transparentBlack);
   lnf.setColour(Slider::textBoxBackgroundColourId,
@@ -34,6 +36,11 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
   lnfMinimal.setColour(Slider::textBoxBackgroundColourId,
                        juce::Colours::transparentBlack);
   lnfMinimal.setColour(Slider::textBoxTextColourId, juce::Colours::ivory);
+
+  int knobSize = 51;
+  int knobSizeMinimal = 54; // Larger size for minimal knobs (top row)
+  int xStart = 266;
+  int xOffsetMultiplier = 74;
 
   // Setup sliders
   int positionIndex = 0; // Separate counter for NAM amp controls (Row 2)
@@ -120,10 +127,10 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
   // Initialize meter positions and styling
   setMeterPosition();
 
-  // Initialize knob labels
+  // Initialize top row knob labels
   drawKnobLabels();
 
-  // Initialize knob value labels
+  // Initialize top row knob value labels
   drawKnobValueLabels();
   updateKnobValueLabels(); // Show initial values
 
@@ -131,6 +138,8 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
   pmc.setColour(juce::Colours::transparentWhite, 0.0f);
 
   addAndMakeVisible(&topBar);
+
+  setupPageTabs();
 }
 
 NamEditor::~NamEditor() {
@@ -144,8 +153,18 @@ void NamEditor::paint(juce::Graphics &g) {
   g.setColour(juce::Colours::white);
   g.setFont(15.0f);
 
-  g.drawImageAt(assetManager->getBackground(), 0, 0);
-  g.drawImageAt(assetManager->getScreens(), 0, 0);
+  // Draw the background for the current page
+  switch (currentPage) {
+  case PRE_EFFECTS:
+    g.drawImageAt(backgroundPreEffects, 0, 0);
+    break;
+  case AMP:
+    g.drawImageAt(backgroundAmp, 0, 0);
+    break;
+  case POST_EFFECTS:
+    g.drawImageAt(backgroundPostEffects, 0, 0);
+    break;
+  }
 }
 
 void NamEditor::resized() {
@@ -306,4 +325,70 @@ void NamEditor::updateKnobValueLabels() {
     // Update the label text
     knobValueLabels[i].setText(formattedValue, juce::dontSendNotification);
   }
+}
+
+void NamEditor::updatePageTabHighlight() {
+  preEffectsPage->setAlpha(currentPage == PRE_EFFECTS ? 1.0f : 0.5f);
+  ampPage->setAlpha(currentPage == AMP ? 1.0f : 0.5f);
+  postEffectsPage->setAlpha(currentPage == POST_EFFECTS ? 1.0f : 0.5f);
+}
+
+void NamEditor::switchToPage(int pageIndex) {
+  if (pageIndex < 0 || pageIndex > 2)
+    return;
+
+  currentPage = pageIndex;
+  updatePageTabHighlight();
+  repaint();
+}
+
+void NamEditor::setupPageTabs() {
+  // Page navigation tabs
+  preEffectsPage = std::make_unique<juce::ImageButton>("PreEffectsPage");
+  ampPage = std::make_unique<juce::ImageButton>("AmpPage");
+  postEffectsPage = std::make_unique<juce::ImageButton>("PostEffectsPage");
+
+  // Load and set tab icons
+  juce::Image preIcon = juce::ImageFileFormat::loadFrom(
+      BinaryData::PreIcon_png, BinaryData::PreIcon_pngSize);
+  juce::Image ampIcon = juce::ImageFileFormat::loadFrom(
+      BinaryData::AmpIcon_png, BinaryData::AmpIcon_pngSize);
+  juce::Image postIcon = juce::ImageFileFormat::loadFrom(
+      BinaryData::PostIcon_png, BinaryData::PostIcon_pngSize);
+
+  preEffectsPage->setImages(false, true, true, preIcon, 1.0f,
+                            juce::Colours::transparentBlack, preIcon, 0.8f,
+                            juce::Colours::transparentBlack, preIcon, 0.6f,
+                            juce::Colours::transparentBlack);
+  ampPage->setImages(false, true, true, ampIcon, 1.0f,
+                     juce::Colours::transparentBlack, ampIcon, 0.8f,
+                     juce::Colours::transparentBlack, ampIcon, 0.6f,
+                     juce::Colours::transparentBlack);
+  postEffectsPage->setImages(false, true, true, postIcon, 1.0f,
+                             juce::Colours::transparentBlack, postIcon, 0.8f,
+                             juce::Colours::transparentBlack, postIcon, 0.6f,
+                             juce::Colours::transparentBlack);
+
+  addAndMakeVisible(preEffectsPage.get());
+  addAndMakeVisible(ampPage.get());
+  addAndMakeVisible(postEffectsPage.get());
+
+  // Attach onClick handlers
+  preEffectsPage->onClick = [this] { switchToPage(PRE_EFFECTS); };
+  ampPage->onClick = [this] { switchToPage(AMP); };
+  postEffectsPage->onClick = [this] { switchToPage(POST_EFFECTS); };
+
+  // Position page navigation tabs
+  int tabSize = 31;
+  int tabSpacing = 22;
+  int startX = 412;
+  int startY = 19;
+
+  preEffectsPage->setBounds(startX, startY, tabSize, tabSize);
+  ampPage->setBounds(startX + tabSize + tabSpacing, startY, tabSize, tabSize);
+  postEffectsPage->setBounds(startX + (tabSize + tabSpacing) * 2, startY,
+                             tabSize, tabSize);
+
+  // Set initial highlight state (AMP page is default)
+  updatePageTabHighlight();
 }

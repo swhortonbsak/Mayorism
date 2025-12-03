@@ -3,7 +3,6 @@
 // clang-format off
 #include "PluginProcessor.h"
 #include "MyLookAndFeel.h"
-#include "AssetManager.h"
 #include "TopBarComponent.h"
 #include "PresetManager/PresetManagerComponent.h"
 // clang-format on
@@ -37,6 +36,12 @@ public:
     Doubler
   };
 
+  enum PageIndex {
+    PRE_EFFECTS = 0,
+    AMP = 1,
+    POST_EFFECTS = 2
+  };
+
 private:
   std::unique_ptr<CustomSlider> sliders[NUM_SLIDERS];
   std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>
@@ -47,7 +52,10 @@ private:
       "BASS_ID",         "MIDDLE_ID",        "TREBLE_ID",
       "OUTPUT_ID",       "PLUGIN_OUTPUT_ID", "DOUBLER_ID"};
 
-  std::unique_ptr<AssetManager> assetManager;
+  // Page background images
+  juce::Image backgroundPreEffects;
+  juce::Image backgroundAmp;
+  juce::Image backgroundPostEffects;
 
   // juce::TooltipWindow tooltipWindow{ this, 200 };
 
@@ -68,6 +76,12 @@ private:
   juce::Label
       knobValueLabels[4]; // Value labels for Input, Gate, Doubler, Output
 
+  // Page navigation tabs
+  std::unique_ptr<juce::ImageButton> preEffectsPage;
+  std::unique_ptr<juce::ImageButton> ampPage;
+  std::unique_ptr<juce::ImageButton> postEffectsPage;
+  int currentPage = AMP;  // Default to AMP page
+
   NamJUCEAudioProcessor &audioProcessor;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NamEditor)
 
@@ -79,4 +93,7 @@ private:
   void drawKnobLabels();
   void drawKnobValueLabels();
   void updateKnobValueLabels();
+  void setupPageTabs();
+  void switchToPage(int pageIndex);
+  void updatePageTabHighlight();
 };

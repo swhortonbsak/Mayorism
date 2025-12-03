@@ -14,7 +14,6 @@ PRIVATE
     PluginProcessor.cpp
     PluginProcessor.h
     MyLookAndFeel.h
-    AssetManager.h
     TopBarComponent.cpp
     TopBarComponent.h
     DoublerProcessor.h

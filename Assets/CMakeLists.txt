@@ -6,12 +6,16 @@ file(GLOB SRC_FILES
 
 juce_add_binary_data(BinaryData SOURCES
     knob.png
-    background.png
-    screens.png
     arrowexpand.png
     arrowcontract.png
     knob_minimal.png
     AmpModels/tworock.nam
+    PreIcon.png
+    AmpIcon.png
+    PostIcon.png
+    backgroundpre.png
+    backgroundamp.png
+    backgroundpost.png
     ${SRC_FILES}
 )
 

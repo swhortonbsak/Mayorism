@@ -2,7 +2,6 @@
 // clang-format off
 #include "PluginProcessor.h"
 #include "MyLookAndFeel.h"
-#include "AssetManager.h"
 // #include "juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h"
 #include <CustomStandaloneWindow/CustomStandaloneFilterWindow.h>
 // clang-format on
