@@ -85,12 +85,20 @@ void NamJUCEAudioProcessor::prepareToPlay(double sampleRate,
   spec.numChannels = getNumOutputChannels();
   spec.maximumBlockSize = samplesPerBlock;
 
+  tsProcessor.prepare(spec);
+
   myNAM.prepare(spec);
   myNAM.hookParameters(apvts);
 
   // Hook independent input/output gain parameters
   pluginInputGain = apvts.getRawParameterValue("PLUGIN_INPUT_ID");
   pluginOutputGain = apvts.getRawParameterValue("PLUGIN_OUTPUT_ID");
+
+  // Hook Tube Screamer parameters
+  tsDrive = apvts.getRawParameterValue("TS_DRIVE_ID");
+  tsTone = apvts.getRawParameterValue("TS_TONE_ID");
+  tsLevel = apvts.getRawParameterValue("TS_LEVEL_ID");
+  tsEnabled = apvts.getRawParameterValue("TS_ENABLED_ID");
 
   doubler.prepare(spec);
 
@@ -177,6 +185,14 @@ void NamJUCEAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
   meterInSource.measureBlock(buffer);
 
+  // TubeScreamer TS808 (before amp) - only process if enabled
+  if (tsEnabled->load() > 0.5f) {
+    tsProcessor.setDrive(tsDrive->load());
+    tsProcessor.setTone(tsTone->load());
+    tsProcessor.setLevel(tsLevel->load());
+    tsProcessor.process(buffer);
+  }
+
   myNAM.processBlock(buffer);
 
   // Do Dual Mono
@@ -219,6 +235,16 @@ NamJUCEAudioProcessor::createParameters() {
       "PLUGIN_INPUT_ID", "PLUGIN_INPUT", -20.0f, 20.0f, 0.0f));
   parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
       "PLUGIN_OUTPUT_ID", "PLUGIN_OUTPUT", -20.0f, 20.0f, 0.0f));
+
+  // Tube Screamer parameters (0-10 range, matching real TS-808)
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "TS_DRIVE_ID", "TS_DRIVE", 0.0f, 10.0f, 5.0f));
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "TS_TONE_ID", "TS_TONE", 0.0f, 10.0f, 5.0f));
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "TS_LEVEL_ID", "TS_LEVEL", 0.0f, 10.0f, 5.0f));
+  parameters.push_back(std::make_unique<juce::AudioParameterBool>(
+      "TS_ENABLED_ID", "TS_ENABLED", false));
 
   auto normRange = NormalisableRange<float>(0.0, 20.0, 0.1f);
   parameters.push_back(std::make_unique<juce::AudioParameterFloat>(

@@ -6,6 +6,7 @@
 #include "NeuralAmpModeler.h"
 #include <ff_meters/ff_meters.h>
 #include "DoublerProcessor.h"
+#include "pedals/TubeScreamer/TSProcessor.h"
 #include "PresetManager/PresetManager.h"
 // clang-format on
 
@@ -75,6 +76,7 @@ private:
   bool namModelLoaded{false};
 
   Doubler doubler;
+  TSProcessor tsProcessor;
 
   bool supportsDouble{false};
 
@@ -86,6 +88,12 @@ private:
   // Independent input/output gain parameters
   std::atomic<float> *pluginInputGain;
   std::atomic<float> *pluginOutputGain;
+
+  // Tube Screamer parameters
+  std::atomic<float> *tsDrive;
+  std::atomic<float> *tsTone;
+  std::atomic<float> *tsLevel;
+  std::atomic<float> *tsEnabled;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NamJUCEAudioProcessor)
 };

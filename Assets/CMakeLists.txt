@@ -9,13 +9,17 @@ juce_add_binary_data(BinaryData SOURCES
     arrowexpand.png
     arrowcontract.png
     knob_minimal.png
+    knob_pre_effects.png
     AmpModels/tworock.nam
     PreIcon.png
     AmpIcon.png
     PostIcon.png
     backgroundpre.png
+    background_pre_no_knobs.png
     backgroundamp.png
     backgroundpost.png
+    PedalButtonOn.png
+    PedalButtonOff.png
     ${SRC_FILES}
 )
 

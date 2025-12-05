@@ -17,6 +17,14 @@ PRIVATE
     TopBarComponent.cpp
     TopBarComponent.h
     DoublerProcessor.h
+    pedals/TubeScreamer/TSProcessor.h
+    pedals/TubeScreamer/dsp/ClippingStage.cpp
+    pedals/TubeScreamer/dsp/ClippingStage.h
+    pedals/TubeScreamer/dsp/ToneStage.cpp
+    pedals/TubeScreamer/dsp/ToneStage.h
+    pedals/TubeScreamer/dsp/ClipWDFa.h
+    pedals/TubeScreamer/dsp/ClipWDFb.h
+    pedals/TubeScreamer/dsp/ClipWDFc.h
     architecture.hpp
 )
 

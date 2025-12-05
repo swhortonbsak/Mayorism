@@ -7,7 +7,7 @@
 #include "PresetManager/PresetManagerComponent.h"
 // clang-format on
 
-#define NUM_SLIDERS 9
+#define NUM_SLIDERS 12
 
 class NamEditor : public juce::AudioProcessorEditor,
                   public juce::Timer,
@@ -33,7 +33,10 @@ public:
     Treble,
     Output,       // NAM amp output
     PluginOutput, // Independent output gain
-    Doubler
+    Doubler,
+    TSDrive,
+    TSTone,
+    TSLevel
   };
 
   enum PageIndex { PRE_EFFECTS = 0, AMP = 1, POST_EFFECTS = 2 };
@@ -44,19 +47,28 @@ private:
       sliderAttachments[NUM_SLIDERS];
 
   juce::String sliderIDs[NUM_SLIDERS]{
-      "PLUGIN_INPUT_ID", "INPUT_ID",         "NGATE_ID",
-      "BASS_ID",         "MIDDLE_ID",        "TREBLE_ID",
-      "OUTPUT_ID",       "PLUGIN_OUTPUT_ID", "DOUBLER_ID"};
+      "PLUGIN_INPUT_ID", "INPUT_ID",    "NGATE_ID",   "BASS_ID",
+      "MIDDLE_ID",       "TREBLE_ID",   "OUTPUT_ID",  "PLUGIN_OUTPUT_ID",
+      "DOUBLER_ID",      "TS_DRIVE_ID", "TS_TONE_ID", "TS_LEVEL_ID"};
 
   // Page background images
   juce::Image backgroundPreEffects;
+  juce::Image backgroundPreEffectsNoKnobs; // Debug version without knobs
   juce::Image backgroundAmp;
   juce::Image backgroundPostEffects;
+
+  // Debug flag: set to true to show background without knobs for positioning
+  bool useDebugPreBackground = false;
+
+  // Pedal button images for TS toggle
+  juce::Image pedalButtonOn;
+  juce::Image pedalButtonOff;
 
   // juce::TooltipWindow tooltipWindow{ this, 200 };
 
   knobLookAndFeel lnf{knobLookAndFeel::KnobTypes::Main};
   knobLookAndFeel lnfMinimal{knobLookAndFeel::KnobTypes::Minimal};
+  knobLookAndFeel lnfPreEffects{knobLookAndFeel::KnobTypes::PreEffects};
 
   juce::String ngThreshold{"Null"};
 
@@ -78,6 +90,11 @@ private:
   std::unique_ptr<juce::ImageButton> postEffectsPage;
   int currentPage = AMP; // Default to AMP page
 
+  // Tube Screamer enable/bypass toggle
+  std::unique_ptr<juce::ImageButton> tsEnabledToggle;
+  std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
+      tsEnabledAttachment;
+
   NamJUCEAudioProcessor &audioProcessor;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NamEditor)
 
@@ -93,9 +110,11 @@ private:
   void switchToPage(int pageIndex);
   void updatePageTabHighlight();
   void setKnobVisibility();
+  void updateTSToggleAppearance();
 
   // Slider initialization functions
   void initializeTopRow();
   void initializeAmpSliders();
+  void initializeTSSliders();
   void initializeSliderAttachments();
 };

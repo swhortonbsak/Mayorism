@@ -47,7 +47,7 @@ juce_add_plugin(${PROJECT_NAME}
     VERSION ${PLUGIN_VERSION}
     ICON_BIG "Assets/ICON.png"
     ICON_SMALL "Assets/ICON.png"
-    COMPANY_NAME "Manos Labrakis"
+    COMPANY_NAME "CraftLabs"
     # IS_SYNTH TRUE/FALSE                 
     # NEEDS_MIDI_INPUT TRUE/FALSE           
     # NEEDS_MIDI_OUTPUT TRUE/FALSE        

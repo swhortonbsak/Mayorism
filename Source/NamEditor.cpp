@@ -7,10 +7,19 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
   // Load page background images
   backgroundPreEffects = juce::ImageFileFormat::loadFrom(
       BinaryData::backgroundpre_png, BinaryData::backgroundpre_pngSize);
+  backgroundPreEffectsNoKnobs = juce::ImageFileFormat::loadFrom(
+      BinaryData::background_pre_no_knobs_png,
+      BinaryData::background_pre_no_knobs_pngSize);
   backgroundAmp = juce::ImageFileFormat::loadFrom(
       BinaryData::backgroundamp_png, BinaryData::backgroundamp_pngSize);
   backgroundPostEffects = juce::ImageFileFormat::loadFrom(
       BinaryData::backgroundpost_png, BinaryData::backgroundpost_pngSize);
+
+  // Load pedal button images for TS toggle
+  pedalButtonOn = juce::ImageFileFormat::loadFrom(
+      BinaryData::PedalButtonOn_png, BinaryData::PedalButtonOn_pngSize);
+  pedalButtonOff = juce::ImageFileFormat::loadFrom(
+      BinaryData::PedalButtonOff_png, BinaryData::PedalButtonOff_pngSize);
 
   // Meters
   meterIn.setMeterSource(&audioProcessor.getMeterInSource());
@@ -47,7 +56,12 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
 
   initializeAmpSliders();
 
+  initializeTSSliders();
+
   initializeSliderAttachments();
+
+  // Update TS toggle appearance to match initial state
+  updateTSToggleAppearance();
 
   addAndMakeVisible(&pmc);
   pmc.setColour(juce::Colours::transparentWhite, 0.0f);
@@ -72,7 +86,11 @@ void NamEditor::paint(juce::Graphics &g) {
   // Draw the background for the current page
   switch (currentPage) {
   case PRE_EFFECTS:
-    g.drawImageAt(backgroundPreEffects, 0, 0);
+    // Use debug background (no knobs) if flag is set, otherwise use normal
+    if (useDebugPreBackground)
+      g.drawImageAt(backgroundPreEffectsNoKnobs, 0, 0);
+    else
+      g.drawImageAt(backgroundPreEffects, 0, 0);
     break;
   case AMP:
     g.drawImageAt(backgroundAmp, 0, 0);
@@ -258,6 +276,12 @@ void NamEditor::setKnobVisibility() {
     sliders[PluginKnobs::Middle]->setVisible(false);
     sliders[PluginKnobs::Treble]->setVisible(false);
     sliders[PluginKnobs::Output]->setVisible(false);
+
+    // Show Tube Screamer controls
+    sliders[PluginKnobs::TSDrive]->setVisible(true);
+    sliders[PluginKnobs::TSTone]->setVisible(true);
+    sliders[PluginKnobs::TSLevel]->setVisible(true);
+    tsEnabledToggle->setVisible(true);
     break;
 
   case AMP:
@@ -267,6 +291,12 @@ void NamEditor::setKnobVisibility() {
     sliders[PluginKnobs::Middle]->setVisible(true);
     sliders[PluginKnobs::Treble]->setVisible(true);
     sliders[PluginKnobs::Output]->setVisible(true);
+
+    // Hide Tube Screamer controls
+    sliders[PluginKnobs::TSDrive]->setVisible(false);
+    sliders[PluginKnobs::TSTone]->setVisible(false);
+    sliders[PluginKnobs::TSLevel]->setVisible(false);
+    tsEnabledToggle->setVisible(false);
     break;
 
   case POST_EFFECTS:
@@ -276,6 +306,12 @@ void NamEditor::setKnobVisibility() {
     sliders[PluginKnobs::Middle]->setVisible(false);
     sliders[PluginKnobs::Treble]->setVisible(false);
     sliders[PluginKnobs::Output]->setVisible(false);
+
+    // Hide Tube Screamer controls
+    sliders[PluginKnobs::TSDrive]->setVisible(false);
+    sliders[PluginKnobs::TSTone]->setVisible(false);
+    sliders[PluginKnobs::TSLevel]->setVisible(false);
+    tsEnabledToggle->setVisible(false);
     break;
   }
 }
@@ -428,6 +464,82 @@ void NamEditor::initializeAmpSliders() {
   }
 }
 
+void NamEditor::initializeTSSliders() {
+  const int knobSize = 53;
+
+  // Simple centered positioning (will be adjusted later)
+  const int xStart = 497;
+  const int xOffsetMultiplier = 65;
+  const int yPosition = 261;
+
+  // TS slider IDs
+  const int tsSliders[] = {PluginKnobs::TSDrive, PluginKnobs::TSTone,
+                           PluginKnobs::TSLevel};
+
+  for (int i = 0; i < 3; ++i) {
+    auto &slider = sliders[tsSliders[i]];
+
+    // Basic setup
+    slider.reset(new CustomSlider());
+    addAndMakeVisible(slider.get());
+
+    // Apply pre-effects look and feel
+    slider->setLookAndFeel(&lnfPreEffects);
+    slider->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    slider->setTextBoxStyle(juce::Slider::NoTextBox, false, 80, 20);
+
+    // Position in row
+    slider->setBounds(xStart + (i * xOffsetMultiplier), yPosition, knobSize,
+                      knobSize);
+
+    slider->addListener(this);
+
+    // NO setCustomSlider() call - use default (same as amp sliders)
+  }
+
+  // TS Enable toggle
+  tsEnabledToggle = std::make_unique<juce::ImageButton>("TS Enable");
+  addAndMakeVisible(tsEnabledToggle.get());
+
+  // Set up the button to act as a toggle button
+  tsEnabledToggle->setClickingTogglesState(true);
+
+  // Set initial images (will be updated by updateTSToggleAppearance)
+  tsEnabledToggle->setImages(
+      false, true, true, pedalButtonOff, 1.0f,
+      juce::Colours::transparentBlack,                        // normal
+      pedalButtonOff, 0.8f, juce::Colours::transparentBlack,  // over
+      pedalButtonOff, 1.0f, juce::Colours::transparentBlack); // down
+
+  // Add onClick handler to update appearance when toggled
+  tsEnabledToggle->onClick = [this]() { updateTSToggleAppearance(); };
+
+  tsEnabledToggle->setMouseCursor(juce::MouseCursor::PointingHandCursor);
+
+  tsEnabledToggle->setBounds(561, 433, 53, 53);
+}
+
+void NamEditor::updateTSToggleAppearance() {
+  // Update the button images based on toggle state
+  bool isToggled = tsEnabledToggle->getToggleState();
+
+  if (isToggled) {
+    // Show ON image when enabled
+    tsEnabledToggle->setImages(
+        false, true, true, pedalButtonOn, 1.0f,
+        juce::Colours::transparentBlack,                       // normal
+        pedalButtonOn, 1.0f, juce::Colours::transparentBlack,  // over
+        pedalButtonOn, 1.0f, juce::Colours::transparentBlack); // down
+  } else {
+    // Show OFF image when disabled
+    tsEnabledToggle->setImages(
+        false, true, true, pedalButtonOff, 1.0f,
+        juce::Colours::transparentBlack,                        // normal
+        pedalButtonOff, 1.0f, juce::Colours::transparentBlack,  // over
+        pedalButtonOff, 1.0f, juce::Colours::transparentBlack); // down
+  }
+}
+
 void NamEditor::initializeSliderAttachments() {
   // Hook slider attachments
   for (int slider = 0; slider < NUM_SLIDERS; ++slider) {
@@ -441,4 +553,9 @@ void NamEditor::initializeSliderAttachments() {
       std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
           audioProcessor.apvts, "DOUBLER_SPREAD_ID",
           *sliders[PluginKnobs::Doubler]);
+
+  // Attach TS Enable toggle button
+  tsEnabledAttachment =
+      std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+          audioProcessor.apvts, "TS_ENABLED_ID", *tsEnabledToggle);
 }
