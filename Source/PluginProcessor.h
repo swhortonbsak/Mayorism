@@ -10,6 +10,7 @@
 #include "pedals/Compressor/CompressorProcessor.h"
 #include "pedals/CleanBoost/CleanBoostProcessor.h"
 #include "pedals/Reverb/ReverbProcessor.h"
+#include "pedals/Delay/DelayProcessor.h"
 #include "PresetManager/PresetManager.h"
 // clang-format on
 
@@ -83,6 +84,7 @@ private:
   CompressorProcessor compressorProcessor;
   CleanBoostProcessor cleanBoostProcessor;
   ReverbProcessor reverbProcessor;
+  DelayProcessor delayProcessor;
 
   bool supportsDouble{false};
 
@@ -116,6 +118,12 @@ private:
   std::atomic<float> *reverbTone;
   std::atomic<float> *reverbSize;
   std::atomic<float> *reverbEnabled;
+
+  // Delay parameters
+  std::atomic<float> *delayTime;
+  std::atomic<float> *delayFeedback;
+  std::atomic<float> *delayMix;
+  std::atomic<float> *delayEnabled;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NamJUCEAudioProcessor)
 };

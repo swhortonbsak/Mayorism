@@ -120,9 +120,17 @@ void NamJUCEAudioProcessor::prepareToPlay(double sampleRate,
   reverbSize = apvts.getRawParameterValue("REVERB_SIZE_ID");
   reverbEnabled = apvts.getRawParameterValue("REVERB_ENABLED_ID");
 
+  // Hook Delay parameters
+  delayTime = apvts.getRawParameterValue("DELAY_TIME_ID");
+  delayFeedback = apvts.getRawParameterValue("DELAY_FEEDBACK_ID");
+  delayMix = apvts.getRawParameterValue("DELAY_MIX_ID");
+  delayEnabled = apvts.getRawParameterValue("DELAY_ENABLED_ID");
+
   doubler.prepare(spec);
 
   reverbProcessor.prepare(spec);
+
+  delayProcessor.prepare(spec);
 
   meterInSource.resize(getTotalNumOutputChannels(),
                        sampleRate * 0.1 / samplesPerBlock);
@@ -243,15 +251,23 @@ void NamJUCEAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     doubler.process(buffer);
   }
 
+  // Delay
+  if (delayEnabled->load() > 0.5f) {
+    delayProcessor.setTime(delayTime->load());
+    delayProcessor.setFeedback(delayFeedback->load());
+    delayProcessor.setMix(delayMix->load());
+    delayProcessor.process(buffer);
+  }
+
   // Reverb (at end of chain, post-effects)
   if (reverbEnabled->load() > 0.5f) {
     reverbProcessor.setMix(reverbMix->load());
     reverbProcessor.setTone(reverbTone->load());
     reverbProcessor.setSize(reverbSize->load());
     reverbProcessor.process(buffer);
-  }
+  }  
 
-  // Apply independent output gain AFTER reverb, BEFORE output metering
+  // Apply independent output gain AFTER all post-effects, BEFORE output metering
   buffer.applyGain(std::powf(10.0f, pluginOutputGain->load() / 20.0f));
 
   meterOutSource.measureBlock(buffer);
@@ -323,6 +339,16 @@ NamJUCEAudioProcessor::createParameters() {
       "REVERB_SIZE_ID", "REVERB_SIZE", 0.0f, 10.0f, 5.0f));
   parameters.push_back(std::make_unique<juce::AudioParameterBool>(
       "REVERB_ENABLED_ID", "REVERB_ENABLED", false));
+
+  // Delay parameters
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "DELAY_TIME_ID", "DELAY_TIME", 1.0f, 997.0f, 499.0f));
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "DELAY_FEEDBACK_ID", "DELAY_FEEDBACK", 0.0f, 1.0f, 0.5f));
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "DELAY_MIX_ID", "DELAY_MIX", 0.0f, 1.0f, 0.5f));
+  parameters.push_back(std::make_unique<juce::AudioParameterBool>(
+      "DELAY_ENABLED_ID", "DELAY_ENABLED", false));
 
   return {parameters.begin(), parameters.end()};
 }

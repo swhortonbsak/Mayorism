@@ -7,7 +7,7 @@
 #include "PresetManager/PresetManagerComponent.h"
 // clang-format on
 
-#define NUM_SLIDERS 19
+#define NUM_SLIDERS 22
 
 class NamEditor : public juce::AudioProcessorEditor,
                   public juce::Timer,
@@ -43,7 +43,10 @@ public:
     BoostVolume,  // Clean Boost volume
     ReverbMix,    // Reverb wet/dry mix
     ReverbTone,   // Reverb damping/tone
-    ReverbSize    // Reverb room size
+    ReverbSize,   // Reverb room size
+    DelayTime,    // Delay time in milliseconds
+    DelayFeedback,// Delay feedback amount
+    DelayMix      // Delay wet/dry mix
   };
 
   enum PageIndex { PRE_EFFECTS = 0, AMP = 1, POST_EFFECTS = 2 };
@@ -60,7 +63,8 @@ private:
       "TS_DRIVE_ID",     "TS_TONE_ID",       "TS_LEVEL_ID",
       "COMP_VOLUME_ID",  "COMP_ATTACK_ID",   "COMP_SUSTAIN_ID",
       "BOOST_VOLUME_ID", "REVERB_MIX_ID",    "REVERB_TONE_ID",
-      "REVERB_SIZE_ID"};
+      "REVERB_SIZE_ID",  "DELAY_TIME_ID",    "DELAY_FEEDBACK_ID",
+      "DELAY_MIX_ID"};
 
   // Page background images
   juce::Image backgroundPreEffects;
@@ -126,6 +130,11 @@ private:
   std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
       reverbEnabledAttachment;
 
+  // Delay enable/bypass toggle
+  std::unique_ptr<juce::ImageButton> delayEnabledToggle;
+  std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
+      delayEnabledAttachment;
+
   NamJUCEAudioProcessor &audioProcessor;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NamEditor)
 
@@ -145,6 +154,7 @@ private:
   void updateCompToggleAppearance();
   void updateBoostToggleAppearance();
   void updateReverbToggleAppearance();
+  void updateDelayToggleAppearance();
 
   // Slider initialization functions
   void initializeTopRow();
@@ -153,5 +163,6 @@ private:
   void initializeCompSliders();
   void initializeBoostSliders();
   void initializeReverbSliders();
+  void initializeDelaySliders();
   void initializeSliderAttachments();
 };
