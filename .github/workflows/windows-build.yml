@@ -11,52 +11,59 @@ env:
   TARGET: Mayerism
 
 jobs:
-  windows:
+  build-windows:
     runs-on: windows-latest
 
     steps:
+      # 1️⃣ Checkout
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
+      # 2️⃣ Install CMake
       - name: Install CMake
-        uses: lukka/get-cmake@v4
+        uses: lukka/get-cmake@latest
 
-      - name: Configure
-        run: cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=Release
+      # 3️⃣ Configure + Build
+      - name: Configure CMake (Release)
+        run: cmake -S . -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=Release
 
       - name: Build VST3
         run: cmake --build ${{ env.BUILD_DIR }} --config Release --target ${{ env.TARGET }}
 
+      # 4️⃣ Prepare VST3 bundle output
       - name: Prepare VST3 bundle
         shell: powershell
         run: |
           $out = "output"
           if (Test-Path $out) { Remove-Item $out -Recurse -Force }
           New-Item -ItemType Directory -Path $out
-
           $vst3 = "${{ env.BUILD_DIR }}\Release\${{ env.TARGET }}.vst3"
           if (-not (Test-Path $vst3)) {
             Write-Error "VST3 bundle not found: $vst3"
             exit 1
           }
-
           Copy-Item $vst3 "$out\${{ env.TARGET }}.vst3" -Recurse
 
-      - name: Zip VST3 (Windows)
+      # 5️⃣ Zip the raw Windows VST3
+      - name: Zip raw VST3 bundle
         shell: powershell
         run: |
           Compress-Archive `
             -Path "output\${{ env.TARGET }}.vst3" `
             -DestinationPath "${{ env.TARGET }}-windows.vst3.zip"
 
-      - name: Install Inno Setup
-        uses: crazy-max/ghaction-inno-setup@v3
-
+      # 6️⃣ Compile installer with Inno Setup Action
       - name: Build Installer
-        run: iscc installer.iss
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          # path to your installer script
+          path: "installer.iss"
+          # optional flags (e.g. /O+ to force output)
+          options: "/O+"
 
+      # 7️⃣ Upload artifacts
       - name: Upload VST3 zip (Windows)
         uses: actions/upload-artifact@v4
         with:
@@ -67,4 +74,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Mayerism-Windows-Installer
-          path: Mayerism-Installer*.exe
+          path: "*.exe"
