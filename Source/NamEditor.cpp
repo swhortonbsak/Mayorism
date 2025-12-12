@@ -65,6 +65,8 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
 
   initializeTSSliders();
 
+  initializeKlonSliders();
+
   initializeCompSliders();
 
   initializeBoostSliders();
@@ -94,6 +96,9 @@ NamEditor::NamEditor(NamJUCEAudioProcessor &p)
 
   // Update Delay toggle appearance to match initial state
   updateDelayToggleAppearance();
+
+  // Update Klon toggle appearance to match initial state
+  updateKlonToggleAppearance();
 
   addAndMakeVisible(&pmc);
   pmc.setColour(juce::Colours::transparentWhite, 0.0f);
@@ -315,6 +320,12 @@ void NamEditor::setKnobVisibility() {
     sliders[PluginKnobs::TSLevel]->setVisible(true);
     tsEnabledToggle->setVisible(true);
 
+    // Show Klon controls
+    sliders[PluginKnobs::KlonGain]->setVisible(true);
+    sliders[PluginKnobs::KlonTreble]->setVisible(true);
+    sliders[PluginKnobs::KlonLevel]->setVisible(true);
+    klonEnabledToggle->setVisible(true);
+
     // Show Compressor controls
     sliders[PluginKnobs::CompVolume]->setVisible(true);
     sliders[PluginKnobs::CompAttack]->setVisible(true);
@@ -358,6 +369,12 @@ void NamEditor::setKnobVisibility() {
     sliders[PluginKnobs::TSLevel]->setVisible(false);
     tsEnabledToggle->setVisible(false);
 
+    // Hide Klon controls
+    sliders[PluginKnobs::KlonGain]->setVisible(false);
+    sliders[PluginKnobs::KlonTreble]->setVisible(false);
+    sliders[PluginKnobs::KlonLevel]->setVisible(false);
+    klonEnabledToggle->setVisible(false);
+
     // Hide Compressor controls
     sliders[PluginKnobs::CompVolume]->setVisible(false);
     sliders[PluginKnobs::CompAttack]->setVisible(false);
@@ -400,6 +417,12 @@ void NamEditor::setKnobVisibility() {
     sliders[PluginKnobs::TSTone]->setVisible(false);
     sliders[PluginKnobs::TSLevel]->setVisible(false);
     tsEnabledToggle->setVisible(false);
+
+    // Hide Klon controls
+    sliders[PluginKnobs::KlonGain]->setVisible(false);
+    sliders[PluginKnobs::KlonTreble]->setVisible(false);
+    sliders[PluginKnobs::KlonLevel]->setVisible(false);
+    klonEnabledToggle->setVisible(false);
 
     // Hide Compressor controls
     sliders[PluginKnobs::CompVolume]->setVisible(false);
@@ -632,6 +655,62 @@ void NamEditor::initializeTSSliders() {
   tsEnabledToggle->setMouseCursor(juce::MouseCursor::PointingHandCursor);
 
   tsEnabledToggle->setBounds(561, 433, 53, 53);
+}
+
+void NamEditor::initializeKlonSliders() {
+  const int knobSize = 53;
+  const int yPosition = 262;
+
+  // --- Knob 1: Gain ---
+  auto &gainSlider = sliders[PluginKnobs::KlonGain];
+  gainSlider.reset(new CustomSlider());
+  addAndMakeVisible(gainSlider.get());
+  gainSlider->setLookAndFeel(&lnfPreEffects);
+  gainSlider->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+  gainSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 80, 20);
+  gainSlider->addListener(this);
+
+  // Set Position Manually for Gain
+  gainSlider->setBounds(738, yPosition, knobSize, knobSize);
+
+  // --- Knob 2: Treble ---
+  auto &trebleSlider = sliders[PluginKnobs::KlonTreble];
+  trebleSlider.reset(new CustomSlider());
+  addAndMakeVisible(trebleSlider.get());
+  trebleSlider->setLookAndFeel(&lnfPreEffects);
+  trebleSlider->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+  trebleSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 80, 20);
+  trebleSlider->addListener(this);
+
+  // Set Position Manually for Treble
+  trebleSlider->setBounds(793, yPosition, knobSize, knobSize);
+
+  // --- Knob 3: Level ---
+  auto &levelSlider = sliders[PluginKnobs::KlonLevel];
+  levelSlider.reset(new CustomSlider());
+  addAndMakeVisible(levelSlider.get());
+  ` levelSlider->setLookAndFeel(&lnfPreEffects);
+  levelSlider->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+  levelSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 80, 20);
+  levelSlider->addListener(this);
+
+  // Set Position Manually for Level
+  levelSlider->setBounds(852, yPosition, knobSize, knobSize);
+
+  // --- Toggle Button ---
+  klonEnabledToggle = std::make_unique<juce::ImageButton>("Klon Enable");
+  addAndMakeVisible(klonEnabledToggle.get());
+  klonEnabledToggle->setClickingTogglesState(true);
+  klonEnabledToggle->setImages(
+      false, true, true, pedalButtonOff, 1.0f,
+      juce::Colours::transparentBlack,                        // normal
+      pedalButtonOff, 0.8f, juce::Colours::transparentBlack,  // over
+      pedalButtonOff, 1.0f, juce::Colours::transparentBlack); // down
+  klonEnabledToggle->onClick = [this]() { updateKlonToggleAppearance(); };
+  klonEnabledToggle->setMouseCursor(juce::MouseCursor::PointingHandCursor);
+
+  // Set Position Manually for Toggle
+  klonEnabledToggle->setBounds(793, 433, 53, 53);
 }
 
 void NamEditor::initializeCompSliders() {
@@ -1031,6 +1110,27 @@ void NamEditor::updateDelayToggleAppearance() {
   }
 }
 
+void NamEditor::updateKlonToggleAppearance() {
+  // Update the button images based on toggle state
+  bool isToggled = klonEnabledToggle->getToggleState();
+
+  if (isToggled) {
+    // Show ON image when enabled
+    klonEnabledToggle->setImages(
+        false, true, true, pedalButtonOn, 1.0f,
+        juce::Colours::transparentBlack,                       // normal
+        pedalButtonOn, 1.0f, juce::Colours::transparentBlack,  // over
+        pedalButtonOn, 1.0f, juce::Colours::transparentBlack); // down
+  } else {
+    // Show OFF image when disabled
+    klonEnabledToggle->setImages(
+        false, true, true, pedalButtonOff, 1.0f,
+        juce::Colours::transparentBlack,                        // normal
+        pedalButtonOff, 1.0f, juce::Colours::transparentBlack,  // over
+        pedalButtonOff, 1.0f, juce::Colours::transparentBlack); // down
+  }
+}
+
 void NamEditor::initializeSliderAttachments() {
   // Hook slider attachments
   for (int slider = 0; slider < NUM_SLIDERS; ++slider) {
@@ -1074,4 +1174,9 @@ void NamEditor::initializeSliderAttachments() {
   chorusEnabledAttachment =
       std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
           audioProcessor.apvts, "CHORUS_ENABLED_ID", *chorusEnabledToggle);
+
+  // Attach Klon Enable toggle button
+  klonEnabledAttachment =
+      std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+          audioProcessor.apvts, "KLON_ENABLED_ID", *klonEnabledToggle);
 }

@@ -7,6 +7,7 @@
 #include <ff_meters/ff_meters.h>
 #include "DoublerProcessor.h"
 #include "pedals/TubeScreamer/TSProcessor.h"
+#include "pedals/KlonCentaur/KlonProcessor.h"
 #include "pedals/Compressor/CompressorProcessor.h"
 #include "pedals/CleanBoost/CleanBoostProcessor.h"
 #include "pedals/Chorus/ChorusProcessor.h"
@@ -82,6 +83,7 @@ private:
 
   Doubler doubler;
   TSProcessor tsProcessor;
+  KlonProcessor klonProcessor;
   CompressorProcessor compressorProcessor;
   CleanBoostProcessor cleanBoostProcessor;
   ChorusProcessor chorusProcessor;
@@ -104,6 +106,12 @@ private:
   std::atomic<float> *tsTone;
   std::atomic<float> *tsLevel;
   std::atomic<float> *tsEnabled;
+
+  // Klon Centaur parameters
+  std::atomic<float> *klonGain;
+  std::atomic<float> *klonTreble;
+  std::atomic<float> *klonLevel;
+  std::atomic<float> *klonEnabled;
 
   // Compressor parameters
   std::atomic<float> *compVolume;

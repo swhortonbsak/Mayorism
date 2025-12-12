@@ -7,7 +7,7 @@
 #include "PresetManager/PresetManagerComponent.h"
 // clang-format on
 
-#define NUM_SLIDERS 25
+#define NUM_SLIDERS 28
 
 class NamEditor : public juce::AudioProcessorEditor,
                   public juce::Timer,
@@ -37,19 +37,22 @@ public:
     TSDrive,
     TSTone,
     TSLevel,
-    CompVolume,   // Compressor volume/makeup gain
-    CompAttack,   // Compressor attack time
-    CompSustain,  // Compressor sustain/release time
-    BoostVolume,  // Clean Boost volume
-    ChorusRate,   // Chorus rate/speed in Hz
-    ChorusDepth,  // Chorus depth/modulation amount
-    ChorusMix,    // Chorus wet/dry mix
-    ReverbMix,    // Reverb wet/dry mix
-    ReverbTone,   // Reverb damping/tone
-    ReverbSize,   // Reverb room size
-    DelayTime,    // Delay time in milliseconds
-    DelayFeedback,// Delay feedback amount
-    DelayMix      // Delay wet/dry mix
+    KlonGain,      // Klon Centaur Gain
+    KlonTreble,    // Klon Centaur Treble
+    KlonLevel,     // Klon Centaur Level
+    CompVolume,    // Compressor volume/makeup gain
+    CompAttack,    // Compressor attack time
+    CompSustain,   // Compressor sustain/release time
+    BoostVolume,   // Clean Boost volume
+    ChorusRate,    // Chorus rate/speed in Hz
+    ChorusDepth,   // Chorus depth/modulation amount
+    ChorusMix,     // Chorus wet/dry mix
+    ReverbMix,     // Reverb wet/dry mix
+    ReverbTone,    // Reverb damping/tone
+    ReverbSize,    // Reverb room size
+    DelayTime,     // Delay time in milliseconds
+    DelayFeedback, // Delay feedback amount
+    DelayMix       // Delay wet/dry mix
   };
 
   enum PageIndex { PRE_EFFECTS = 0, AMP = 1, POST_EFFECTS = 2 };
@@ -64,6 +67,7 @@ private:
       "BASS_ID",         "MIDDLE_ID",        "TREBLE_ID",
       "OUTPUT_ID",       "PLUGIN_OUTPUT_ID", "DOUBLER_ID",
       "TS_DRIVE_ID",     "TS_TONE_ID",       "TS_LEVEL_ID",
+      "KLON_GAIN_ID",    "KLON_TREBLE_ID",   "KLON_LEVEL_ID",
       "COMP_VOLUME_ID",  "COMP_ATTACK_ID",   "COMP_SUSTAIN_ID",
       "BOOST_VOLUME_ID", "CHORUS_RATE_ID",   "CHORUS_DEPTH_ID",
       "CHORUS_MIX_ID",   "REVERB_MIX_ID",    "REVERB_TONE_ID",
@@ -119,6 +123,11 @@ private:
   std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
       tsEnabledAttachment;
 
+  // Klon enable/bypass toggle
+  std::unique_ptr<juce::ImageButton> klonEnabledToggle;
+  std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
+      klonEnabledAttachment;
+
   // Compressor enable/bypass toggle
   std::unique_ptr<juce::ImageButton> compEnabledToggle;
   std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
@@ -160,6 +169,7 @@ private:
   void updatePageTabHighlight();
   void setKnobVisibility();
   void updateTSToggleAppearance();
+  void updateKlonToggleAppearance();
   void updateCompToggleAppearance();
   void updateBoostToggleAppearance();
   void updateChorusToggleAppearance();
@@ -170,6 +180,7 @@ private:
   void initializeTopRow();
   void initializeAmpSliders();
   void initializeTSSliders();
+  void initializeKlonSliders();
   void initializeCompSliders();
   void initializeBoostSliders();
   void initializeChorusSliders();

@@ -90,6 +90,7 @@ void NamJUCEAudioProcessor::prepareToPlay(double sampleRate,
   cleanBoostProcessor.prepare(spec);
 
   tsProcessor.prepare(spec);
+  klonProcessor.prepare(spec);
 
   myNAM.prepare(spec);
   myNAM.hookParameters(apvts);
@@ -103,6 +104,12 @@ void NamJUCEAudioProcessor::prepareToPlay(double sampleRate,
   tsTone = apvts.getRawParameterValue("TS_TONE_ID");
   tsLevel = apvts.getRawParameterValue("TS_LEVEL_ID");
   tsEnabled = apvts.getRawParameterValue("TS_ENABLED_ID");
+
+  // Hook Klon Centaur parameters
+  klonGain = apvts.getRawParameterValue("KLON_GAIN_ID");
+  klonTreble = apvts.getRawParameterValue("KLON_TREBLE_ID");
+  klonLevel = apvts.getRawParameterValue("KLON_LEVEL_ID");
+  klonEnabled = apvts.getRawParameterValue("KLON_ENABLED_ID");
 
   // Hook Compressor parameters
   compVolume = apvts.getRawParameterValue("COMP_VOLUME_ID");
@@ -247,6 +254,14 @@ void NamJUCEAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     tsProcessor.process(buffer);
   }
 
+  // Klon Centaur (after TS, before amp) - only process if enabled
+  if (klonEnabled->load() > 0.5f) {
+    klonProcessor.setGain(klonGain->load() / 10.0f);
+    klonProcessor.setTreble(klonTreble->load() / 10.0f);
+    klonProcessor.setLevel(klonLevel->load() / 10.0f);
+    klonProcessor.process(buffer);
+  }
+
   myNAM.processBlock(buffer);
 
   // Do Dual Mono
@@ -325,6 +340,16 @@ NamJUCEAudioProcessor::createParameters() {
   parameters.push_back(std::make_unique<juce::AudioParameterBool>(
       "TS_ENABLED_ID", "TS_ENABLED", false));
 
+  // Klon Centaur parameters (0-10 range)
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "KLON_GAIN_ID", "KLON_GAIN", 0.0f, 10.0f, 5.0f));
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "KLON_TREBLE_ID", "KLON_TREBLE", 0.0f, 10.0f, 5.0f));
+  parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
+      "KLON_LEVEL_ID", "KLON_LEVEL", 0.0f, 10.0f, 5.0f));
+  parameters.push_back(std::make_unique<juce::AudioParameterBool>(
+      "KLON_ENABLED_ID", "KLON_ENABLED", false));
+
   // Compressor parameters
   parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
       "COMP_VOLUME_ID", "COMP_VOLUME", 0.0f, 10.0f, 5.0f));
@@ -343,7 +368,7 @@ NamJUCEAudioProcessor::createParameters() {
 
   // Chorus parameters (Boss CE-1 authentic ranges)
   parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
-      "CHORUS_RATE_ID", "CHORUS_RATE", 0.3f, 3.0f, 1.65f));
+      "CHORUS_RATE_ID", "CHORUS_RATE", 0.3f, 3.0f, 1.6f));
   parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
       "CHORUS_DEPTH_ID", "CHORUS_DEPTH", 0.01f, 0.05f, 0.03f));
   parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
