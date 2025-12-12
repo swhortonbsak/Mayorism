@@ -18,11 +18,6 @@
 
 </div>
 
-</br>
-<p align="center">
-    <img src="https://i.allthepics.net/2024/08/12/namJuce.gif" alt="animated" />
-</p>
-
 ## Features
 
 - **Neural Amp Modeling** - AI-powered amp simulation supporting multiple model types (ConvNet, LSTM, WaveNet)
