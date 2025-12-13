@@ -74,4 +74,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Mayerism-Windows-Installer
-          path: "*.exe"
+          path: "Output/*.exe"
