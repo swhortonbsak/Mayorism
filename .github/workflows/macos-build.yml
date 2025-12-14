@@ -29,8 +29,8 @@ jobs:
       - name: Configure CMake (Release, ARM64)
         run: cmake -S . -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64"
 
-      - name: Build VST3
-        run: cmake --build ${{ env.BUILD_DIR }} --config Release --target ${{ env.TARGET }}
+      - name: Build All
+        run: cmake --build ${{ env.BUILD_DIR }} --config Release
 
       # 4️⃣ Prepare VST3 bundle output
       - name: Prepare VST3 bundle
