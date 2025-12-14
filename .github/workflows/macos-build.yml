@@ -54,16 +54,15 @@ jobs:
       # 6️⃣ Create DMG with background image
       - name: Create DMG installer
         run: |
-          # Create temporary DMG
+          # Create temporary read-write DMG
           temp_dmg="temp.dmg"
           final_dmg="${{ env.TARGET }}-macOS-Installer.dmg"
           
-          # Create DMG with 200MB size (adjustable)
-          hdiutil create -volname "Mayerism" -srcfolder output -ov -format UDZO -o "$temp_dmg"
+          # Create DMG in read-write format first
+          hdiutil create -volname "Mayerism" -srcfolder output -ov -format UDRW -o "$temp_dmg"
           
-          # Mount the DMG
-          mount_point=$(mktemp -d)
-          hdiutil attach "$temp_dmg" -mountpoint "$mount_point"
+          # Mount the DMG (read-write)
+          mount_point=$(hdiutil attach "$temp_dmg" -readwrite -noverify | grep "^/dev" | awk '{print $NF}')
           
           # Set background image
           background_image="Assets/CraftLabs Mayerism Background.png"
@@ -76,9 +75,9 @@ jobs:
           ln -s "/Library/Audio/Plug-Ins/VST3" "$mount_point/VST3"
           
           # Unmount
-          hdiutil detach "$mount_point"
+          hdiutil eject "$mount_point"
           
-          # Convert to final format with background
+          # Convert to compressed read-only format
           hdiutil convert "$temp_dmg" -format UDZO -o "$final_dmg"
           rm "$temp_dmg"
 
