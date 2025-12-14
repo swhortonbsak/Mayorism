@@ -1,0 +1,90 @@
+name: macOS VST3 + Installer (Universal)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+env:
+  BUILD_DIR: build
+  TARGET: Mayerism
+
+jobs:
+  build-macos-universal:
+    runs-on: macos-14
+
+    steps:
+      # 1️⃣ Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # 2️⃣ Install CMake
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      # 3️⃣ Configure + Build
+      - name: Configure CMake (Release, Universal)
+        run: cmake -S . -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Build All
+        run: cmake --build ${{ env.BUILD_DIR }} --config Release
+
+      # 4️⃣ Prepare VST3 bundle output
+      - name: Prepare VST3 bundle
+        run: |
+          out="output"
+          rm -rf "$out"
+          mkdir -p "$out"
+          vst3="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
+          if [ ! -d "$vst3" ]; then
+            echo "Error: VST3 bundle not found: $vst3"
+            exit 1
+          fi
+          cp -R "$vst3" "$out/${{ env.TARGET }}.vst3"
+
+      # 6️⃣ Create DMG with background image
+      - name: Create DMG installer
+        run: |
+          # Create temporary read-write DMG
+          temp_dmg="temp.dmg"
+          final_dmg="${{ env.TARGET }}-macOS-Universal-Installer.dmg"
+          
+          # Create DMG in read-write format first
+          hdiutil create -volname "Mayerism" -srcfolder output -ov -format UDRW -o "$temp_dmg"
+          
+          # Mount the DMG (read-write)
+          hdiutil attach "$temp_dmg" -readwrite -noverify
+          mount_point="/Volumes/Mayerism"
+          
+          # Set background image
+          background_image="Assets/CraftLabs Mayerism Background.png"
+          if [ -f "$background_image" ]; then
+            mkdir -p "$mount_point/.background"
+            cp "$background_image" "$mount_point/.background/background.png"
+          fi
+          
+          # Create symlink to VST3 folder
+          ln -s "/Library/Audio/Plug-Ins/VST3" "$mount_point/VST3"
+          
+          # Unmount
+          hdiutil eject "$mount_point"
+          
+          # Convert to compressed read-only format
+          hdiutil convert "$temp_dmg" -format UDZO -o "$final_dmg"
+          rm "$temp_dmg"
+
+      # 7️⃣ Upload artifacts
+      - name: Upload VST3 zip (macOS Universal)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mayerism-macOS-Universal-VST3
+          path: output
+
+      - name: Upload DMG Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mayerism-macOS-Universal-Installer
+          path: Mayerism-macOS-Universal-Installer.dmg
