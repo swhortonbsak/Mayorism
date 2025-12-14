@@ -1,4 +1,4 @@
-name: macOS VST3 + Installer (ARM64)
+name: macOS VST3 + Installer (Intel)
 
 on:
   workflow_dispatch:
@@ -11,8 +11,8 @@ env:
   TARGET: Mayerism
 
 jobs:
-  build-macos-arm64:
-    runs-on: macos-14-arm64
+  build-macos-intel:
+    runs-on: macos-14-intel
 
     steps:
       # 1️⃣ Checkout
@@ -26,8 +26,8 @@ jobs:
         uses: lukka/get-cmake@latest
 
       # 3️⃣ Configure + Build
-      - name: Configure CMake (Release, ARM64)
-        run: cmake -S . -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64"
+      - name: Configure CMake (Release, x86_64)
+        run: cmake -S . -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
 
       - name: Build VST3
         run: cmake --build ${{ env.BUILD_DIR }} --config Release --target ${{ env.TARGET }}
@@ -49,14 +49,14 @@ jobs:
       - name: Zip raw VST3 bundle
         run: |
           cd output
-          zip -r "../${{ env.TARGET }}-macos.vst3.zip" "${{ env.TARGET }}.vst3"
+          zip -r "../${{ env.TARGET }}-macos-intel.vst3.zip" "${{ env.TARGET }}.vst3"
 
       # 6️⃣ Create DMG with background image
       - name: Create DMG installer
         run: |
           # Create temporary read-write DMG
           temp_dmg="temp.dmg"
-          final_dmg="${{ env.TARGET }}-macOS-Installer.dmg"
+          final_dmg="${{ env.TARGET }}-macOS-Installer-Intel.dmg"
           
           # Create DMG in read-write format first
           hdiutil create -volname "Mayerism" -srcfolder output -ov -format UDRW -o "$temp_dmg"
@@ -83,14 +83,14 @@ jobs:
           rm "$temp_dmg"
 
       # 7️⃣ Upload artifacts
-      - name: Upload VST3 zip (macOS)
+      - name: Upload VST3 zip (macOS Intel)
         uses: actions/upload-artifact@v4
         with:
-          name: Mayerism-macOS-VST3
-          path: Mayerism-macos.vst3.zip
+          name: Mayerism-macOS-VST3-Intel
+          path: Mayerism-macos-intel.vst3.zip
 
-      - name: Upload DMG Installer
+      - name: Upload DMG Installer (Intel)
         uses: actions/upload-artifact@v4
         with:
-          name: Mayerism-macOS-Installer
-          path: Mayerism-macOS-Installer.dmg
+          name: Mayerism-macOS-Installer-Intel
+          path: Mayerism-macOS-Installer-Intel.dmg
