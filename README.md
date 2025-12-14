@@ -74,7 +74,7 @@ MAYERISM is designed as a single, cohesive guitar plugin. The goal is not endles
 ### Presets & Interface
 
 * **Preset Management**
-  Save and load presets that store **plugin settings**, not amp combinations
+  Save and load presets that store your settings
 
 * **Real-time Metering**
   Input and output level visualization
