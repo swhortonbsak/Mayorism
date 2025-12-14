@@ -53,7 +53,7 @@ jobs:
           # path to your installer script
           path: "installer.iss"
           # optional flags (e.g. /O+ to force output)
-          options: "/O+"
+          options: "/O+ /Oinstaller_output"
 
       # 7️⃣ Upload artifacts
       - name: Upload VST3 zip (Windows)
@@ -66,4 +66,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Mayerism-Windows-Installer
-          path: "Output/*.exe"
+          path: "installer_output/*.exe"
