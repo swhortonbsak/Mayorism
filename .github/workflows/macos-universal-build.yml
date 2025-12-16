@@ -39,48 +39,84 @@ jobs:
           rm -rf "$out"
           mkdir -p "$out"
           vst3="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
-          if [ ! -d "$vst3" ]; then
-            echo "Error: VST3 bundle not found: $vst3"
-            exit 1
-          fi
-          cp -R "$vst3" "$out/${{ env.TARGET }}.vst3"
+      # 5️⃣ Import Signing Certificate
+      - name: Import Signing Certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.P12_PASSWORD }} # Use same pass for temp keychain
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-      # 5️⃣ Ad-hoc Sign VST3 (Required for ARM64)
-      - name: Ad-hoc Sign VST3
-        run: codesign --force --deep -s - output/${{ env.TARGET }}.vst3
+          # Import certificate and provision profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
 
-      # 6️⃣ Create DMG with background image
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -k $KEYCHAIN_PATH -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # Force use of this keychain for signing
+          security list-keychains -d user -s $KEYCHAIN_PATH
+
+      # 6️⃣ Sign VST3 Bundle (Hardened Runtime)
+      - name: Sign VST3 Bundle
+        env: 
+          # Extract identity name from certificate subject 
+          # OR just rely on 'Developer ID Application' auto-match via standard string
+          # But better to use strict variable if needed. For now "Developer ID Application" is standard.
+          SIGNING_IDENTITY: "Developer ID Application" 
+        run: |
+          # The -f (force) -s (sign) --deep (recursive) --options runtime (Hardened Runtime) --timestamp (Required for notarization)
+          codesign --force --deep --options runtime --timestamp --sign "$SIGNING_IDENTITY" "output/${{ env.TARGET }}.vst3"
+
+      # 7️⃣ Create DMG installer
       - name: Create DMG installer
         run: |
-          # Create temporary read-write DMG
           temp_dmg="temp.dmg"
           final_dmg="${{ env.TARGET }}-macOS-Universal-Installer.dmg"
           
-          # Create DMG in read-write format first
           hdiutil create -volname "Mayerism" -srcfolder output -ov -format UDRW -o "$temp_dmg"
-          
-          # Mount the DMG (read-write)
           hdiutil attach "$temp_dmg" -readwrite -noverify
           mount_point="/Volumes/Mayerism"
           
-          # Set background image
           background_image="Assets/CraftLabs Mayerism Background.png"
           if [ -f "$background_image" ]; then
             mkdir -p "$mount_point/.background"
             cp "$background_image" "$mount_point/.background/background.png"
           fi
           
-          # Create symlink to VST3 folder
           ln -s "/Library/Audio/Plug-Ins/VST3" "$mount_point/VST3"
-          
-          # Unmount
           hdiutil eject "$mount_point"
-          
-          # Convert to compressed read-only format
           hdiutil convert "$temp_dmg" -format UDZO -o "$final_dmg"
           rm "$temp_dmg"
 
-      # 7️⃣ Upload artifacts
+      # 8️⃣ Sign the DMG itself
+      - name: Sign DMG
+        run: |
+           codesign --force --sign "Developer ID Application" --timestamp "${{ env.TARGET }}-macOS-Universal-Installer.dmg"
+
+      # 9️⃣ Notarize DMG
+      - name: Notarize DMG
+        run: |
+          xcrun notarytool submit "${{ env.TARGET }}-macOS-Universal-Installer.dmg" \
+            --apple-id "${{ secrets.AC_USERNAME }}" \
+            --password "${{ secrets.AC_PASSWORD }}" \
+            --team-id "${{ secrets.AC_TEAM_ID }}" \
+            --wait
+
+      # 🔟 Staple Ticket
+      - name: Staple Ticket
+        run: |
+          xcrun stapler staple "${{ env.TARGET }}-macOS-Universal-Installer.dmg"
+
+      # 1️⃣1️⃣ Upload artifacts
       - name: Upload VST3 zip (macOS Universal)
         uses: actions/upload-artifact@v4
         with:
