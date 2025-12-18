@@ -17,12 +17,12 @@
     </choices-outline>
 
     <!-- Choice: VST3 -->
-    <choice id="choice_vst3" title="VST3 Plugin">
+    <choice id="choice_vst3" title="VST3 Plugin" selected="true">
         <pkg-ref id="com.craftlabs.mayerism.vst3"/>
     </choice>
 
     <!-- Choice: AU -->
-    <choice id="choice_au" title="Audio Unit Plugin">
+    <choice id="choice_au" title="Audio Unit Plugin" selected="true">
         <pkg-ref id="com.craftlabs.mayerism.au"/>
     </choice>
 

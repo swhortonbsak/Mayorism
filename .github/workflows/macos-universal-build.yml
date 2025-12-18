@@ -113,6 +113,8 @@ jobs:
           # 8.1 VST3 Staging
           mkdir -p staging_vst3/Library/Audio/Plug-Ins/VST3
           cp -R "${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3" staging_vst3/Library/Audio/Plug-Ins/VST3/
+          echo "VST3 Staging Size:"
+          du -sh staging_vst3
           
           pkgbuild --root staging_vst3 \
                    --identifier "com.craftlabs.mayerism.vst3" \
@@ -123,12 +125,17 @@ jobs:
           # 8.2 AU Staging
           mkdir -p staging_au/Library/Audio/Plug-Ins/Components
           cp -R "${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/AU/${{ env.TARGET }}.component" staging_au/Library/Audio/Plug-Ins/Components/
+          echo "AU Staging Size:"
+          du -sh staging_au
           
           pkgbuild --root staging_au \
                    --identifier "com.craftlabs.mayerism.au" \
                    --version "0.0.1" \
                    --sign "$INST_IDENTITY" \
                    "packages/Mayerism-AU.pkg"
+          
+          echo "Intermediate Packages Size:"
+          du -sh packages/*
 
       # 9️⃣ Build Final Product Installer
       - name: Build Product Installer
@@ -142,8 +149,11 @@ jobs:
                        --sign "$INST_IDENTITY" \
                        --timestamp \
                        "$FINAL_PKG"
+          
+          echo "Final Installer Size:"
+          du -sh "$FINAL_PKG"
 
-      # 🔟 Verify PKG Locally
+      # 🔟 Verify PKG locally
       - name: Verify PKG
         run: |
           pkgutil --check-signature "${{ env.TARGET }}-macOS-Universal-Installer.pkg"
