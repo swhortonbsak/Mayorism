@@ -3,30 +3,27 @@
     <title>Mayerism</title>
     <welcome file="Welcome.html" mime-type="text/html" />
     <license file="License.txt" />
-    <background file="background.png" alignment="left" scaling="proportional"/>
     
     <!-- Organize options -->
     <options customize="always" require-scripts="false"/>
     
     <!-- Define the choices -->
     <choices-outline>
-        <line choice="default">
-            <line choice="choice_vst3"/>
-            <line choice="choice_au"/>
-        </line>
+        <line choice="choice_vst3"/>
+        <line choice="choice_au"/>
     </choices-outline>
 
     <!-- Choice: VST3 -->
-    <choice id="choice_vst3" title="VST3 Plugin" selected="true">
+    <choice id="choice_vst3" title="VST3 Plugin" selected="true" visible="true">
         <pkg-ref id="com.craftlabs.mayerism.vst3"/>
     </choice>
 
     <!-- Choice: AU -->
-    <choice id="choice_au" title="Audio Unit Plugin" selected="true">
+    <choice id="choice_au" title="Audio Unit Plugin" selected="true" visible="true">
         <pkg-ref id="com.craftlabs.mayerism.au"/>
     </choice>
 
-    <!-- Package References -->
-    <pkg-ref id="com.craftlabs.mayerism.vst3">Mayerism-VST3.pkg</pkg-ref>
-    <pkg-ref id="com.craftlabs.mayerism.au">Mayerism-AU.pkg</pkg-ref>
+    <!-- Package References (The # tells productbuild to embed these files) -->
+    <pkg-ref id="com.craftlabs.mayerism.vst3">#Mayerism-VST3.pkg</pkg-ref>
+    <pkg-ref id="com.craftlabs.mayerism.au">#Mayerism-AU.pkg</pkg-ref>
 </installer-gui-script>

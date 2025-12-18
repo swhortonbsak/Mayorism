@@ -144,7 +144,7 @@ jobs:
           FINAL_PKG="${{ env.TARGET }}-macOS-Universal-Installer.pkg"
           
           productbuild --distribution "Assets/Installer/distribution.xml" \
-                       --package-path "packages" \
+                       --package-path "$GITHUB_WORKSPACE/packages" \
                        --resources "Assets/Installer" \
                        --sign "$INST_IDENTITY" \
                        --timestamp \
