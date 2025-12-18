@@ -26,7 +26,7 @@
         <pkg-ref id="com.craftlabs.mayerism.au"/>
     </choice>
 
-    <!-- Package References (will be filled by productbuild, but good to define IDs) -->
-    <pkg-ref id="com.craftlabs.mayerism.vst3" version="0.0.1" onConclusion="none">Mayerism-VST3.pkg</pkg-ref>
-    <pkg-ref id="com.craftlabs.mayerism.au" version="0.0.1" onConclusion="none">Mayerism-AU.pkg</pkg-ref>
+    <!-- Package References -->
+    <pkg-ref id="com.craftlabs.mayerism.vst3"/>
+    <pkg-ref id="com.craftlabs.mayerism.au"/>
 </installer-gui-script>
