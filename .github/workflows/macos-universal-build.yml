@@ -32,100 +32,114 @@ jobs:
       - name: Build All
         run: cmake --build ${{ env.BUILD_DIR }} --config Release
 
-      # 4️⃣ Prepare VST3 bundle output
-      - name: Prepare VST3 bundle
-        run: |
-          out="output"
-          rm -rf "$out"
-          mkdir -p "$out"
-          vst3="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
-          if [ ! -d "$vst3" ]; then
-            echo "Error: VST3 bundle not found: $vst3"
-            exit 1
-          fi
-          cp -R "$vst3" "$out/${{ env.TARGET }}.vst3"
-      # 5️⃣ Import Signing Certificate
-      - name: Import Signing Certificate
+      # 5️⃣ Import Signing Certificates (App + Installer)
+      - name: Import Signing Certificates
         env:
+          # Application Cert (for code signing)
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          # Installer Cert (for pkg signing) - NEW
+          INSTALLER_CERT_BASE64: ${{ secrets.INSTALLER_CERT_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.P12_PASSWORD }} # Use same pass for temp keychain
+          KEYCHAIN_PASSWORD: ${{ secrets.P12_PASSWORD }}
         run: |
-          # Create variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          # Paths
+          CERT_APP_PATH=$RUNNER_TEMP/build_certificate_app.p12
+          CERT_INST_PATH=$RUNNER_TEMP/build_certificate_installer.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-          # Import certificate and provision profile from secrets
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          # Decode both certs
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERT_APP_PATH
+          echo -n "$INSTALLER_CERT_BASE64" | base64 --decode -o $CERT_INST_PATH
 
-          # create temporary keychain
+          # Create/Unlock Keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # import certificate to keychain
-          security import $CERTIFICATE_PATH -k $KEYCHAIN_PATH -P "$P12_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          # Import Application Cert
+          security import $CERT_APP_PATH -k $KEYCHAIN_PATH -P "$P12_PASSWORD" -T /usr/bin/codesign
           
-          # Force use of this keychain for signing
+          # Import Installer Cert
+          security import $CERT_INST_PATH -k $KEYCHAIN_PATH -P "$P12_PASSWORD" -T /usr/bin/productbuild
+
+          # Set permissions
+          security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychains -d user -s $KEYCHAIN_PATH
 
-      # 6️⃣ Sign VST3 Bundle (Hardened Runtime)
-      - name: Sign VST3 Bundle
-        env: 
-          # Extract identity name from certificate subject 
-          # OR just rely on 'Developer ID Application' auto-match via standard string
-          # But better to use strict variable if needed. For now "Developer ID Application" is standard.
-          SIGNING_IDENTITY: "Developer ID Application" 
+      # 6️⃣ Code Sign Components (VST3 and AU)
+      - name: Code Sign Components
         run: |
-          # The -f (force) -s (sign) --deep (recursive) --options runtime (Hardened Runtime) --timestamp (Required for notarization)
-          codesign --force --deep --options runtime --timestamp --sign "$SIGNING_IDENTITY" "output/${{ env.TARGET }}.vst3"
-
-      # 7️⃣ Create DMG installer (Professional)
-      - name: Create DMG installer
-        run: |
-          # Install create-dmg utility
-          brew install create-dmg
-
-          final_dmg="${{ env.TARGET }}-macOS-Universal-Installer.dmg"
+          # Sign all built targets found in Release
+          # Note: We sign the SOURCE files in BUILD_DIR before packaging
+          # We check for both VST3 and Component (AU)
           
-          # Clean up previous attempts
-          rm -f "$final_dmg"
-
-          # Use create-dmg to build the installer
-          # --volname: Name of the mounted volume
-          # --background: Path to your BG image
-          # --window-pos: Position on screen when opened
-          # --window-size: Size of the window (should match BG image size)
-          # --icon-size: Size of icons
-          # --icon: Position of the plugin file (Name, X, Y)
-          # --app-drop-link: Position of the VST3 folder drop target (X, Y) relative to the target path
-          # output/Mayerism.vst3: The source file to put in the DMG
+          IDENTITY="Developer ID Application"
           
-          # Prepare the custom symlink for the installer
-          ln -s /Library/Audio/Plug-Ins/VST3 output/VST3
+          # VST3
+          vst3_src="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
+          if [ -d "$vst3_src" ]; then
+             echo "Signing VST3..."
+             codesign --force --deep --options runtime --timestamp --sign "$IDENTITY" "$vst3_src"
+          else
+             echo "⚠️ Warning: VST3 not found at $vst3_src"
+          fi
 
-          create-dmg \
-            --volname "Mayerism" \
-            --background "Assets/DMG Background@2x.png" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "${{ env.TARGET }}.vst3" 131 197 \
-            --icon "VST3" 468 197 \
-            --hide-extension "VST3" \
-            "$final_dmg" \
-            "output/"
+          # AU (Component)
+          au_src="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/AU/${{ env.TARGET }}.component"
+          if [ -d "$au_src" ]; then
+             echo "Signing AU..."
+             codesign --force --deep --options runtime --timestamp --sign "$IDENTITY" "$au_src"
+          else
+             echo "⚠️ Warning: AU not found at $au_src - Did you build it?"
+             # Fail if AU missing, since we expect it now
+             exit 1 
+          fi
 
-      # 8️⃣ Sign the DMG itself
-      - name: Sign DMG
+      # 7️⃣ Build Intermediate Component Packages
+      - name: Build Component Packages
         run: |
-           codesign --force --sign "Developer ID Application" --timestamp "${{ env.TARGET }}-macOS-Universal-Installer.dmg"
+          mkdir -p packages
+          
+          # VST3 Package
+          # Install Location: /Library/Audio/Plug-Ins/VST3
+          vst3_src="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
+          pkgbuild --root "$vst3_src" \
+                   --install-location "/Library/Audio/Plug-Ins/VST3/${{ env.TARGET }}.vst3" \
+                   --identifier "com.craftlabs.mayerism.vst3" \
+                   --version "0.0.1" \
+                   "packages/Mayerism-VST3.pkg"
 
-      # 9️⃣ Notarize DMG
-      - name: Notarize DMG
+          # AU Package
+          # Install Location: /Library/Audio/Plug-Ins/Components
+          au_src="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/AU/${{ env.TARGET }}.component"
+          pkgbuild --root "$au_src" \
+                   --install-location "/Library/Audio/Plug-Ins/Components/${{ env.TARGET }}.component" \
+                   --identifier "com.craftlabs.mayerism.au" \
+                   --version "0.0.1" \
+                   "packages/Mayerism-AU.pkg"
+
+      # 8️⃣ Build Final Product Installer
+      - name: Build Product Installer
         run: |
-          xcrun notarytool submit "${{ env.TARGET }}-macOS-Universal-Installer.dmg" \
+          # Identity for Installer Signing
+          INST_IDENTITY="Developer ID Installer"
+          FINAL_PKG="${{ env.TARGET }}-macOS-Universal-Installer.pkg"
+          
+          # Note: --resources Assets/Installer picks up Welcome, License, etc. assuming they are there.
+          # We generated Welcome.html and License.txt in that folder.
+          # We point to distribution.xml
+          
+          productbuild --distribution "Assets/Installer/distribution.xml" \
+                       --package-path "packages" \
+                       --resources "Assets/Installer" \
+                       --sign "$INST_IDENTITY" \
+                       --timestamp \
+                       "$FINAL_PKG"
+
+      # 9️⃣ Notarize Installer
+      - name: Notarize Installer
+        run: |
+          xcrun notarytool submit "${{ env.TARGET }}-macOS-Universal-Installer.pkg" \
             --apple-id "${{ secrets.AC_USERNAME }}" \
             --password "${{ secrets.AC_PASSWORD }}" \
             --team-id "${{ secrets.AC_TEAM_ID }}" \
@@ -134,17 +148,11 @@ jobs:
       # 🔟 Staple Ticket
       - name: Staple Ticket
         run: |
-          xcrun stapler staple "${{ env.TARGET }}-macOS-Universal-Installer.dmg"
+          xcrun stapler staple "${{ env.TARGET }}-macOS-Universal-Installer.pkg"
 
-      # 1️⃣1️⃣ Upload artifacts
-      - name: Upload VST3 zip (macOS Universal)
-        uses: actions/upload-artifact@v4
-        with:
-          name: Mayerism-macOS-Universal-VST3
-          path: output
-
-      - name: Upload DMG Installer
+      # 1️⃣1️⃣ Upload Artifacts
+      - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
           name: Mayerism-macOS-Universal-Installer
-          path: Mayerism-macOS-Universal-Installer.dmg
+          path: Mayerism-macOS-Universal-Installer.pkg

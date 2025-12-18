@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>Mayerism</title>
+    <welcome file="Welcome.html" mime-type="text/html" />
+    <license file="License.txt" />
+    <background file="background.png" alignment="left" scaling="proportional"/>
+    
+    <!-- Organize options -->
+    <options customize="always" require-scripts="false"/>
+    
+    <!-- Define the choices -->
+    <choices-outline>
+        <line choice="default">
+            <line choice="choice_vst3"/>
+            <line choice="choice_au"/>
+        </line>
+    </choices-outline>
+
+    <!-- Choice: VST3 -->
+    <choice id="choice_vst3" title="VST3 Plugin">
+        <pkg-ref id="com.craftlabs.mayerism.vst3"/>
+    </choice>
+
+    <!-- Choice: AU -->
+    <choice id="choice_au" title="Audio Unit Plugin">
+        <pkg-ref id="com.craftlabs.mayerism.au"/>
+    </choice>
+
+    <!-- Package References (will be filled by productbuild, but good to define IDs) -->
+    <pkg-ref id="com.craftlabs.mayerism.vst3" version="0.0.1" onConclusion="none">Mayerism-VST3.pkg</pkg-ref>
+    <pkg-ref id="com.craftlabs.mayerism.au" version="0.0.1" onConclusion="none">Mayerism-AU.pkg</pkg-ref>
+</installer-gui-script>
