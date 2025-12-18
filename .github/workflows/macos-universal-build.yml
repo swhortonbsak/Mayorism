@@ -95,18 +95,28 @@ jobs:
              exit 1 
           fi
 
-      # 7️⃣ Build Intermediate Component Packages
+      # 7️⃣ Inspect & Verify Signatures
+      - name: Verify Signatures
+        run: |
+          echo "Verifying VST3 Signature..."
+          codesign -dv --verbose=4 "${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
+          
+          echo "Verifying AU Signature..."
+          codesign -dv --verbose=4 "${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/AU/${{ env.TARGET }}.component"
+
+      # 8️⃣ Build Signed Intermediate Component Packages
       - name: Build Component Packages
         run: |
           mkdir -p packages
+          INST_IDENTITY="Developer ID Installer"
           
           # VST3 Package
-          # Use --component to correctly preserve bundle structure/signing
           vst3_src="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
           pkgbuild --component "$vst3_src" \
                    --install-location "/Library/Audio/Plug-Ins/VST3" \
                    --identifier "com.craftlabs.mayerism.vst3" \
                    --version "0.0.1" \
+                   --sign "$INST_IDENTITY" \
                    "packages/Mayerism-VST3.pkg"
 
           # AU Package
@@ -115,18 +125,15 @@ jobs:
                    --install-location "/Library/Audio/Plug-Ins/Components" \
                    --identifier "com.craftlabs.mayerism.au" \
                    --version "0.0.1" \
+                   --sign "$INST_IDENTITY" \
                    "packages/Mayerism-AU.pkg"
 
-      # 8️⃣ Build Final Product Installer
+      # 9️⃣ Build Final Product Installer
       - name: Build Product Installer
         run: |
           # Identity for Installer Signing
           INST_IDENTITY="Developer ID Installer"
           FINAL_PKG="${{ env.TARGET }}-macOS-Universal-Installer.pkg"
-          
-          # Note: --resources Assets/Installer picks up Welcome, License, etc. assuming they are there.
-          # We generated Welcome.html and License.txt in that folder.
-          # We point to distribution.xml
           
           productbuild --distribution "Assets/Installer/distribution.xml" \
                        --package-path "packages" \
@@ -135,9 +142,10 @@ jobs:
                        --timestamp \
                        "$FINAL_PKG"
 
-      # 9️⃣ Notarize Installer
+      # 🔟 Notarize Installer (With Logging)
       - name: Notarize Installer
         run: |
+          # Submit and capture output (Simple format)
           xcrun notarytool submit "${{ env.TARGET }}-macOS-Universal-Installer.pkg" \
             --apple-id "${{ secrets.AC_USERNAME }}" \
             --password "${{ secrets.AC_PASSWORD }}" \
