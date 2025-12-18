@@ -101,19 +101,18 @@ jobs:
           mkdir -p packages
           
           # VST3 Package
-          # Install Location: /Library/Audio/Plug-Ins/VST3
+          # Use --component to correctly preserve bundle structure/signing
           vst3_src="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/VST3/${{ env.TARGET }}.vst3"
-          pkgbuild --root "$vst3_src" \
-                   --install-location "/Library/Audio/Plug-Ins/VST3/${{ env.TARGET }}.vst3" \
+          pkgbuild --component "$vst3_src" \
+                   --install-location "/Library/Audio/Plug-Ins/VST3" \
                    --identifier "com.craftlabs.mayerism.vst3" \
                    --version "0.0.1" \
                    "packages/Mayerism-VST3.pkg"
 
           # AU Package
-          # Install Location: /Library/Audio/Plug-Ins/Components
           au_src="${{ env.BUILD_DIR }}/Mayerism_artefacts/Release/AU/${{ env.TARGET }}.component"
-          pkgbuild --root "$au_src" \
-                   --install-location "/Library/Audio/Plug-Ins/Components/${{ env.TARGET }}.component" \
+          pkgbuild --component "$au_src" \
+                   --install-location "/Library/Audio/Plug-Ins/Components" \
                    --identifier "com.craftlabs.mayerism.au" \
                    --version "0.0.1" \
                    "packages/Mayerism-AU.pkg"
