@@ -193,12 +193,48 @@ jobs:
 
       # 1️⃣1️⃣ Notarize Installer
       - name: Notarize Installer
+        id: notarize
         run: |
-          xcrun notarytool submit "${{ env.TARGET }}-macOS-Universal-Installer.pkg" \
+          # Submit and capture the output
+          RESULT=$(xcrun notarytool submit "${{ env.TARGET }}-macOS-Universal-Installer.pkg" \
             --apple-id "${{ secrets.AC_USERNAME }}" \
             --password "${{ secrets.AC_PASSWORD }}" \
             --team-id "${{ secrets.AC_TEAM_ID }}" \
-            --wait
+            --wait 2>&1)
+          
+          echo "$RESULT"
+          
+          # Extract submission ID (more robust - handles whitespace variations)
+          SUBMISSION_ID=$(echo "$RESULT" | grep -E "^\s*id:" | sed 's/.*id:[[:space:]]*\([a-f0-9-]*\).*/\1/')
+          
+          if [ -z "$SUBMISSION_ID" ]; then
+            echo "⚠️ Failed to extract submission ID from output"
+            echo "Full output above - please check manually"
+          else
+            echo "Submission ID: $SUBMISSION_ID"
+            echo "submission_id=$SUBMISSION_ID" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check if rejected
+          if echo "$RESULT" | grep -q "status: Rejected"; then
+            echo "❌ Notarization was rejected!"
+            exit 1
+          elif echo "$RESULT" | grep -q "status: Invalid"; then
+            echo "❌ Notarization was invalid!"
+            exit 1
+          fi
+          
+          echo "✅ Notarization accepted!"
+
+      # 1️⃣1️⃣.5️⃣ Get Notarization Log on Failure
+      - name: Get Notarization Log
+        if: failure() && steps.notarize.outputs.submission_id != ''
+        run: |
+          echo "Fetching notarization log for submission: ${{ steps.notarize.outputs.submission_id }}"
+          xcrun notarytool log "${{ steps.notarize.outputs.submission_id }}" \
+            --apple-id "${{ secrets.AC_USERNAME }}" \
+            --password "${{ secrets.AC_PASSWORD }}" \
+            --team-id "${{ secrets.AC_TEAM_ID }}"
 
       # 1️⃣2️⃣ Staple Ticket
       - name: Staple Ticket
