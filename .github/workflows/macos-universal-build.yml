@@ -205,7 +205,7 @@ jobs:
           echo "$RESULT"
           
           # Extract submission ID (more robust - handles whitespace variations)
-          SUBMISSION_ID=$(echo "$RESULT" | grep -E "^\s*id:" | sed 's/.*id:[[:space:]]*\([a-f0-9-]*\).*/\1/')
+          SUBMISSION_ID=$(echo "$RESULT" | grep -E "^\s*id:" | head -n 1 | sed 's/.*id:[[:space:]]*\([a-f0-9-]*\).*/\1/')
           
           if [ -z "$SUBMISSION_ID" ]; then
             echo "⚠️ Failed to extract submission ID from output"
