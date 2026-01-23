@@ -89,3 +89,30 @@ MAYERISM is designed as a single, cohesive guitar plugin. The goal is not endles
 ## License
 
 This project is open source and distributed under the terms specified in the LICENSE file.
+
+## Acknowledgements & Thanks
+
+MAYERISM would not be possible without the incredible open-source work of others in the audio DSP and music technology community. Huge thanks to the authors and contributors of the following projects:
+
+- [**NeuralAmpModelerPlugin**](https://github.com/sdatkinson/NeuralAmpModelerPlugin) 
+  Created by Steven Atkinson and contributors  
+  Used as the foundation for neural amp modeling and tone reproduction.
+
+- [**KlonCentaur**](https://github.com/jatinchowdhury18/KlonCentaur)  
+  Created by Jatin Chowdhury  
+  Inspiration and reference for transparent overdrive design.
+
+- [**TS-808-Ultra**](https://github.com/jstubbs/ts-808-ultra)  
+  Created by James Stubbs  
+  Reference implementation for classic Tube Screamer–style overdrive behavior.
+
+- [**JUCE Framework**](https://github.com/juce/juce)  
+  Developed by Raw Material Software  
+  Used for cross-platform audio plugin development and user interface implementation.
+
+- [**Two Rock Studio Signature + OX Box 2×12 Two Rock Cab (V2)**](https://www.tone3000.com/tones/two-rock-studio-signature-ox-box-2x12-two-rock-cab-v2-5367)  
+  Originally shared on TONE3000 by danielnguyen
+  Used as main amp emulation, slightly modified for use in MAYERISM.  
+
+Each of these projects is licensed under its own open-source license.  
+Please refer to their respective repositories and license files for full details.
