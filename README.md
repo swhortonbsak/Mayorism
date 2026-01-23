@@ -91,7 +91,7 @@ This project is open source and distributed under the terms specified in the LIC
 
 MAYERISM would not be possible without the incredible open-source work of others in the audio DSP and music technology community. Huge thanks to the authors and contributors of the following projects:
 
-- [**NeuralAmpModelerPlugin**](https://github.com/sdatkinson/NeuralAmpModelerPlugin) 
+- [**NeuralAmpModelerPlugin**](https://github.com/sdatkinson/NeuralAmpModelerPlugin)
   Created by Steven Atkinson and contributors  
   Used as the foundation for neural amp modeling and tone reproduction.
 
