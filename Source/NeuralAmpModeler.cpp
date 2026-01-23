@@ -30,7 +30,8 @@ void NeuralAmpModeler::processBlock(juce::AudioBuffer<float> &buffer) {
   this->updateParameters();
 
   auto *channelDataLeft = buffer.getWritePointer(0);
-  auto *channelDataRight = buffer.getWritePointer(1);
+  auto *channelDataRight =
+      (buffer.getNumChannels() > 1) ? buffer.getWritePointer(1) : nullptr;
   auto *outputData = outputBuffer.getWritePointer(0);
 
   float **inputPointer = &channelDataLeft;
@@ -231,10 +232,16 @@ double NeuralAmpModeler::dB_to_linear(double db_value) {
 void NeuralAmpModeler::doDualMono(juce::AudioBuffer<float> &mainBuffer,
                                   float **input) {
   auto channelDataLeft = mainBuffer.getWritePointer(0);
-  auto channelDataRight = mainBuffer.getWritePointer(1);
 
-  for (int sample = 0; sample < mainBuffer.getNumSamples(); ++sample) {
-    channelDataRight[sample] = input[0][sample];
-    channelDataLeft[sample] = input[0][sample];
+  if (mainBuffer.getNumChannels() > 1) {
+    auto channelDataRight = mainBuffer.getWritePointer(1);
+    for (int sample = 0; sample < mainBuffer.getNumSamples(); ++sample) {
+      channelDataRight[sample] = input[0][sample];
+      channelDataLeft[sample] = input[0][sample];
+    }
+  } else {
+    for (int sample = 0; sample < mainBuffer.getNumSamples(); ++sample) {
+      channelDataLeft[sample] = input[0][sample];
+    }
   }
 }

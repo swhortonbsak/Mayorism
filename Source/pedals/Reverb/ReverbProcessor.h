@@ -30,9 +30,7 @@ public:
    * 5 = 50% wet / 50% dry (balanced)
    * 10 = 100% wet (full reverb)
    */
-  void setMix(float mix) {
-    currentMix = juce::jlimit(0.0f, 10.0f, mix);
-  }
+  void setMix(float mix) { currentMix = juce::jlimit(0.0f, 10.0f, mix); }
 
   /**
    * Set the tone/damping (0.0 to 10.0)
@@ -40,9 +38,7 @@ public:
    * 5 = medium damping (balanced)
    * 10 = full damping (dark, warm reverb)
    */
-  void setTone(float tone) {
-    currentTone = juce::jlimit(0.0f, 10.0f, tone);
-  }
+  void setTone(float tone) { currentTone = juce::jlimit(0.0f, 10.0f, tone); }
 
   /**
    * Set the size/room size (0.0 to 10.0)
@@ -50,9 +46,7 @@ public:
    * 5 = medium room (balanced decay)
    * 10 = large hall (long decay)
    */
-  void setSize(float size) {
-    currentSize = juce::jlimit(0.0f, 10.0f, size);
-  }
+  void setSize(float size) { currentSize = juce::jlimit(0.0f, 10.0f, size); }
 
   /**
    * Process audio buffer through reverb
@@ -61,9 +55,15 @@ public:
     // Rebuild parameters every block from current setter values
     updateReverbParameters();
 
-    // Process stereo (plugin architecture guarantees 2 channels)
-    reverb.processStereo(buffer.getWritePointer(0), buffer.getWritePointer(1),
-                         buffer.getNumSamples());
+    // Process based on channel configuration
+    if (buffer.getNumChannels() == 1) {
+      // Mono processing
+      reverb.processMono(buffer.getWritePointer(0), buffer.getNumSamples());
+    } else {
+      // Stereo processing
+      reverb.processStereo(buffer.getWritePointer(0), buffer.getWritePointer(1),
+                           buffer.getNumSamples());
+    }
   }
 
   // Getters for current parameter values (for UI)
@@ -82,14 +82,14 @@ private:
 
   // User-adjustable parameters
   // Defaults optimized for subtle, natural reverb
-  float currentMix = 5.0f;   // Default: 50% wet/dry balance
-  float currentTone = 5.0f;  // Default: medium damping (0.5)
-  float currentSize = 5.0f;  // Default: medium room (0.5 size)
+  float currentMix = 5.0f;  // Default: 50% wet/dry balance
+  float currentTone = 5.0f; // Default: medium damping (0.5)
+  float currentSize = 5.0f; // Default: medium room (0.5 size)
 
   // Hardcoded parameters (not exposed to user)
   // Optimized for natural guitar reverb
-  static constexpr float hardcodedWidth = 1.0f;       // Full stereo width
-  static constexpr float hardcodedFreezeMode = 0.0f;  // Normal mode
+  static constexpr float hardcodedWidth = 1.0f;      // Full stereo width
+  static constexpr float hardcodedFreezeMode = 0.0f; // Normal mode
 
   /**
    * Helper function to update reverb parameters from current user values

@@ -196,19 +196,14 @@ bool NamJUCEAudioProcessor::isBusesLayoutSupported(
   juce::ignoreUnused(layouts);
   return true;
 #else
-  // This is the place where you check if the layout is supported.
-  // In this template code we only support mono or stereo.
-  // Some plugin hosts, such as certain GarageBand versions, will only
-  // load plugins that support stereo bus layouts.
-  if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono() &&
-      layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+  // STRICTLY Require Stereo Output
+  if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
     return false;
 
-    // This checks if the input layout matches the output layout
-#if !JucePlugin_IsSynth
-  if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+  // Allow Mono or Stereo Input
+  if (layouts.getMainInputChannelSet() != juce::AudioChannelSet::mono() &&
+      layouts.getMainInputChannelSet() != juce::AudioChannelSet::stereo())
     return false;
-#endif
 
   return true;
 #endif
@@ -227,7 +222,9 @@ void NamJUCEAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   juce::dsp::AudioBlock<float> block(buffer);
 
   auto *channelDataLeft = buffer.getWritePointer(0);
-  auto *channelDataRight = buffer.getWritePointer(1);
+  // Safely get Right channel only if we have > 1 output channel
+  auto *channelDataRight =
+      (totalNumOutputChannels > 1) ? buffer.getWritePointer(1) : nullptr;
 
   buffer.applyGain(std::powf(10.0f, pluginInputGain->load() / 20.0f));
 
@@ -268,9 +265,11 @@ void NamJUCEAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
   myNAM.processBlock(buffer);
 
-  // Do Dual Mono
-  for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-    channelDataRight[sample] = channelDataLeft[sample];
+  // Do Dual Mono (Copy Left to Right) purely if we have a stereo output
+  if (channelDataRight != nullptr) {
+    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+      channelDataRight[sample] = channelDataLeft[sample];
+  }
 
   // Doubler
   if (*apvts.getRawParameterValue("DOUBLER_SPREAD_ID") > 0.0) {
