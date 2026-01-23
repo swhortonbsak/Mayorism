@@ -34,9 +34,6 @@ MAYERISM is designed as a single, cohesive guitar plugin. The goal is not endles
   * Touch sensitivity and pick dynamics
   * Smooth midrange and glassy high end
 
-* **NeuralAmpModeler powered**
-  Utilizes NAM technology for accurate, high-quality amp behavior rather than multiple interchangeable amp models.
-
 ### Integrated Pedal Suite
 
 * **Tube Screamer–style Overdrive**
