@@ -12,6 +12,8 @@ ChangesAssociations=no
 Uninstallable=yes
 ; Reduce prompting during automated builds
 DisableStartupPrompt=yes
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
