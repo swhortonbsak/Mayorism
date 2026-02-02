@@ -1,0 +1,50 @@
+name: Linux Build (JUCE)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install JUCE dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake ninja-build g++ git \
+            libasound2-dev \
+            libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev \
+            libxcomposite-dev libxrender-dev libxdamage-dev libxfixes-dev \
+            libgl1-mesa-dev \
+            libfreetype6-dev libfontconfig1-dev \
+            libwebkit2gtk-4.0-dev \
+            curl pkg-config
+
+      - name: Configure (Release)
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build build -j 2
+
+      - name: Collect VST3 artefacts
+        run: |
+          mkdir -p artifacts
+          find build -type d -name "*.vst3" -exec cp -R {} artifacts/ \;
+
+      - name: Upload artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mayerism-Linux-VST3
+          path: artifacts
