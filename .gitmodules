@@ -13,3 +13,6 @@
 [submodule "Modules/JUCE"]
 	path = Modules/JUCE
 	url = https://github.com/juce-framework/JUCE
+[submodule "Modules/AudioDSPTools"]
+  path = Modules/AudioDSPTools
+  url = https://github.com/swhortonbsak/AudioDSPTools.git
