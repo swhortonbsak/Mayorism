@@ -226,7 +226,7 @@ void NamJUCEAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   auto *channelDataRight =
       (totalNumOutputChannels > 1) ? buffer.getWritePointer(1) : nullptr;
 
-  buffer.applyGain(std::powf(10.0f, pluginInputGain->load() / 20.0f));
+  buffer.applyGain(std::pow(10.0f, pluginInputGain->load() / 20.0f));
 
   meterInSource.measureBlock(buffer);
 
@@ -302,7 +302,7 @@ void NamJUCEAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   }
 
   // Apply independent output gain AFTER all post-effects
-  buffer.applyGain(std::powf(10.0f, pluginOutputGain->load() / 20.0f));
+  buffer.applyGain(std::pow(10.0f, pluginOutputGain->load() / 20.0f));
 
   // --- SAFETY OUTPUT CLIPPER ---
   // Soft clip the final output to prevent harsh digital clipping.
